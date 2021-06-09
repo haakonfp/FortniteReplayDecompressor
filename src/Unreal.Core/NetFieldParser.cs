@@ -47,8 +47,8 @@ namespace Unreal.Core
             List<Type> propertyTypes = new List<Type>();
 
             //Loads all types from game reader assembly. Currently no support for referenced assemblies (TODO)
-            netFields.AddRange(allTypes.Where(x => x.GetCustomAttribute<NetFieldExportGroupAttribute>() != null));
-            classNetCaches.AddRange(allTypes.Where(x => x.GetCustomAttribute<NetFieldExportRPCAttribute>() != null));
+            netFields.AddRange(allTypes.Where(x => x.GetCustomAttribute<NetFieldExportGroupAttribute>(false) != null));
+            classNetCaches.AddRange(allTypes.Where(x => x.GetCustomAttribute<NetFieldExportRPCAttribute>(false) != null));
             propertyTypes.AddRange(allTypes.Where(x => typeof(IProperty).IsAssignableFrom(x) && !x.IsInterface && !x.IsAbstract));
 
             _parserInfo = new NetFieldParserInfo();

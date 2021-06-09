@@ -44,7 +44,7 @@ namespace ConsoleReader
 
             //var replayFile = "Replays/season12_arena.replay";
             //var replayFile = "Replays/season11.31.replay
-            var replayFile = "Replays/winning.replay"; //Used for testing
+            var replayFile = "Replays/replay_Bow.replay"; //Used for testing
             //var replayFile = @"C:\Users\TnT\Source\Repos\FortniteReplayDecompressor_Shiqan\src\ConsoleReader\bin\Release\netcoreapp3.1\Replays\collectPickup.replay";
 
             //var replayFile = "Replays/season11.11.replay"; //Used for testing
@@ -90,7 +90,7 @@ namespace ConsoleReader
                     ++count;
 
                     sw.Restart();
-                    var replay = reader.ReadReplay(replayFile, ParseType.Debug);
+                    var replay = reader.ReadReplay(replayFile, ParseType.Full);
 
                     sw.Stop();
 
