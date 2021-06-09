@@ -196,6 +196,22 @@ namespace FortniteReplayReader.Models
                     });
                 }
             }
+
+            if(gameState.WinningTeam.HasValue)
+            {
+                GameState.WinningTeam = gameState.WinningTeam.Value;
+
+                if(_teams.TryGetValue((int)GameState.WinningTeam, out Team team))
+                {
+                    foreach(Player player in team.Players)
+                    {
+                        if(player.Placement == 0)
+                        {
+                            player.Placement = 1;
+                        }
+                    }
+                }
+            }
         }
 
         internal void UpdateContainer(uint channelId, BaseProp container)
