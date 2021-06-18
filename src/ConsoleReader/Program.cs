@@ -59,7 +59,7 @@ namespace ConsoleReader
         }
         */
 
-        //[Benchmark]
+        [Benchmark]
         public FortniteReplay ReadServerReplay()
         {
             return _reader.ReadReplay("Replays/server.replay", Type);
