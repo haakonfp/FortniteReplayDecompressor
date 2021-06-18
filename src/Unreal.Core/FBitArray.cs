@@ -21,7 +21,6 @@ namespace Unreal.Core
         private IPinnedMemoryOwner<bool> _owner;
 
         public int Length { get; private set; }
-        public bool IsReadOnly => false;
 
         public FBitArray()
         {

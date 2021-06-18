@@ -59,37 +59,37 @@ namespace ConsoleReader
         }
         */
 
-        [Benchmark]
+        //[Benchmark]
         public FortniteReplay ReadServerReplay()
         {
             return _reader.ReadReplay("Replays/server.replay", Type);
         }
 
-        //[Benchmark]
+        [Benchmark]
         public FortniteReplay ReadMassiveReplay()
         {
             return _reader.ReadReplay("Replays/massive.replay", Type);
         }
 
-        //[Benchmark]
+        [Benchmark]
         public FortniteReplay ReadLongReplay()
         {
             return _reader.ReadReplay("Replays/newSeason.replay", Type);
         }
         
-        //[Benchmark]
+        [Benchmark]
         public FortniteReplay ReadShortReplay()
         {
             return _reader.ReadReplay("Replays/replay_Bow.replay", Type);
         }
         
-        //[Benchmark]
+        [Benchmark]
         public FortniteReplay ReadOldReplay()
         {
             return _reader.ReadReplay("Replays/season11.11.replay", Type);
         }
 
-        //[Benchmark]
+        [Benchmark]
         public FortniteReplay ReadRoundReplay()
         {
             return _reader.ReadReplay("Replays/rounds.replay", Type);
@@ -143,7 +143,7 @@ namespace ConsoleReader
 
             //var replayFile = "Replays/season12_arena.replay";
             //var replayFile = "Replays/season11.31.replay
-            var replayFile = "Replays/newSeason.replay"; //Used for testing
+            var replayFile = "Replays/server.replay"; //Used for testing
             //var replayFile = @"C:\Users\TnT\Source\Repos\FortniteReplayDecompressor_Shiqan\src\ConsoleReader\bin\Release\netcoreapp3.1\Replays\collectPickup.replay";
 
             //var replayFile = "Replays/season11.11.replay"; //Used for testing

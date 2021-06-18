@@ -53,6 +53,9 @@ namespace Unreal.Core
 
         private PlaybackPacket _currentPacket = new PlaybackPacket();
         private DataBunch _currentBunch = new DataBunch();
+        private NetBitReader _packetReader = new NetBitReader();
+        private NetBitReader _exportReader = new NetBitReader();
+
         private DataBunch _partialBunch;
         private int _inReliable = 0;
 
@@ -502,6 +505,14 @@ namespace Unreal.Core
             archive.EngineNetworkVersion = header.EngineNetworkVersion;
             archive.NetworkVersion = header.NetworkVersion;
 
+            //Update the reader
+            _packetReader.EngineNetworkVersion = header.EngineNetworkVersion;
+            _exportReader.EngineNetworkVersion = header.EngineNetworkVersion;
+            _packetReader.NetworkVersion = header.NetworkVersion;
+            _exportReader.NetworkVersion = header.NetworkVersion;
+            _packetReader.ReplayHeaderFlags = header.Flags;
+            _exportReader.ReplayHeaderFlags = header.Flags;
+
             Replay.Header = header;
         }
 
@@ -776,12 +787,19 @@ namespace Unreal.Core
                 // TODO seperate reader?
                 var size = archive.ReadInt32();
 
-                //using MemoryBuffer buffer = archive.GetMemoryBuffer(size);
-                using NetBitReader reader = new NetBitReader(archive.BasePointer + archive.Position, size, size * 8);
+                try
+                {
+                    _exportReader.SetBits(archive.BasePointer + archive.Position, size, size * 8);
 
-                archive.Seek(size, SeekOrigin.Current);
+                    archive.Seek(size, SeekOrigin.Current);
 
-                InternalLoadObject(reader, true);
+                    InternalLoadObject(_exportReader, true);
+                }
+                finally
+                {
+                    _exportReader.DisposeBits();
+                }
+
             }
         }
 
@@ -2134,23 +2152,22 @@ namespace Unreal.Core
                     bitSize--;
                 }
 
-                using var bitArchive = new NetBitReader(ptr, packet.DataLength, bitSize)
-                {
-                    EngineNetworkVersion = Replay.Header.EngineNetworkVersion,
-                    NetworkVersion = Replay.Header.NetworkVersion,
-                    ReplayHeaderFlags = Replay.Header.Flags
-                };
+                _packetReader.SetBits(ptr, packet.DataLength, bitSize);
 
                 try
                 {
-                    if (bitArchive.GetBitsLeft() > 0)
+                    if (_packetReader.GetBitsLeft() > 0)
                     {
-                        ReceivedPacket(bitArchive);
+                        ReceivedPacket(_packetReader);
                     }
                 }
                 catch (Exception ex)
                 {
                     _logger?.LogError(ex, $"failed ReceivedPacket, index: {_packetIndex}");
+                }
+                finally
+                {
+                    _packetReader.DisposeBits();
                 }
             }
             else

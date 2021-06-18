@@ -35,6 +35,7 @@ namespace Unreal.Core
 
         private int[] _tempLastBit = GetPool();
         private int[] _tempPosition = GetPool();
+        private bool _returnPools = true;
 
         private static ConcurrentQueue<int[]> _positionQueues = new ConcurrentQueue<int[]>();
 
@@ -42,6 +43,11 @@ namespace Unreal.Core
         /// For pushing and popping FBitReaderMark positions.
         /// </summary>
         public int MarkPosition { get; private set; }
+
+        public BitReader()
+        {
+
+        }
 
         public BitReader(byte* ptr, int byteCount, int bitCount)
         {
@@ -701,6 +707,7 @@ namespace Unreal.Core
         public override void Dispose()
         {
             Bits.Dispose();
+
             _positionQueues.Enqueue(_tempLastBit);
             _positionQueues.Enqueue(_tempPosition);
         }
@@ -724,5 +731,22 @@ namespace Unreal.Core
 
                 IsError = false;
         }
+
+        #region Bit Array Handling
+
+        public void SetBits(byte* ptr, int byteCount, int bitCount)
+        {
+            LastBit = bitCount;
+            Bits = new FBitArray(ptr, byteCount, LastBit);
+            _returnPools = false;
+            _position = 0;
+        }
+
+        public void DisposeBits()
+        {
+            Bits.Dispose();
+        }
+
+        #endregion
     }
 }
