@@ -71,25 +71,25 @@ namespace ConsoleReader
             return _reader.ReadReplay("Replays/massive.replay", Type);
         }
 
-        [Benchmark]
+        //[Benchmark]
         public FortniteReplay ReadLongReplay()
         {
             return _reader.ReadReplay("Replays/newSeason.replay", Type);
         }
         
-        [Benchmark]
+        //[Benchmark]
         public FortniteReplay ReadShortReplay()
         {
             return _reader.ReadReplay("Replays/replay_Bow.replay", Type);
         }
         
-        [Benchmark]
+        //[Benchmark]
         public FortniteReplay ReadOldReplay()
         {
             return _reader.ReadReplay("Replays/season11.11.replay", Type);
         }
 
-        [Benchmark]
+        //[Benchmark]
         public FortniteReplay ReadRoundReplay()
         {
             return _reader.ReadReplay("Replays/rounds.replay", Type);
@@ -195,7 +195,7 @@ namespace ConsoleReader
                     sw.Stop();
                      
                     Console.WriteLine($"Elapsed: {sw.ElapsedMilliseconds}ms. Total Groups Read: {reader?.TotalGroupsRead}. Failed Bunches: {reader?.TotalFailedBunches}. Failed Replicator: {reader?.TotalFailedReplicatorReceives} Null Exports: {reader?.NullHandles} Property Errors: {reader?.PropertyError} Failed Property Reads: {reader?.FailedToRead}. Missing Properties: {reader?.MissingProperty}. Success Properties: {reader?.SuccessProperties}");
-                    //Console.Write($"Pins: {MemoryBuffer.Count}");
+                    //Console.Write($"Pins: {MemoryBuffer.pins}");
 
                     if(i == 8)
                     {
