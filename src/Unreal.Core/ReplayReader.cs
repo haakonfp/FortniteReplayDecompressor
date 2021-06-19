@@ -128,7 +128,7 @@ namespace Unreal.Core
 
             foreach (var exportGroupMap in GuidCache.NetFieldExportGroupMap)
             {
-                builder.AppendLine($"Path: {exportGroupMap.Key}");
+                builder.AppendLine($"Path: {exportGroupMap.Value.PathName} - Index: {exportGroupMap.Value.PathNameIndex}");
 
                 foreach (var exportGroup in exportGroupMap.Value.NetFieldExports)
                 {
@@ -143,7 +143,7 @@ namespace Unreal.Core
 
             var s = builder.ToString();
 
-            var n = String.Join("\n", GuidCache.NetGuidToPathName.Select(x => $"{x.Key} - {x.Value}"));
+             var n = String.Join("\n", GuidCache.NetGuidToPathName.Select(x => $"{x.Key} - {x.Value}"));
 
 #endif
 
@@ -2449,6 +2449,43 @@ namespace Unreal.Core
             return decompressed;
         }
 
+#if DEBUG
+        //Can be used at the start of the ProcessBunch method to search for data
+        private void Find(NetBitReader reader, byte[] bytes)
+        {
+            reader.Reset();
+
+            int totalBits = reader.GetBitsLeft();
+
+            for(int i = 0; i < totalBits - (bytes.Length * 8); i++)
+            {
+                reader.Seek(i, SeekOrigin.Begin);
+
+                byte[] testBytes = reader.ReadBytes(bytes.Length);
+
+                bool found = true;
+
+                for(int z = 0; z < testBytes.Length; z++)
+                {
+                    if(testBytes[z] != bytes[z])
+                    {
+                        found = false;
+
+                        break;
+                    }
+                }
+
+                if (found)
+                {
+
+                }
+
+                reader.Reset();
+            }
+
+            reader.Reset();
+        }
+#endif
         /// <summary>
         /// Changes the parsing mode for specific NetFieldExport types
         /// </summary>
