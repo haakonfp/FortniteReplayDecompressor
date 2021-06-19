@@ -55,6 +55,7 @@ namespace Unreal.Core
         private DataBunch _currentBunch = new DataBunch();
         private NetBitReader _packetReader = new NetBitReader();
         private NetBitReader _exportReader = new NetBitReader();
+        private NetDeltaUpdate _deltaUpdate = new NetDeltaUpdate();
 
         private DataBunch _partialBunch;
         private int _inReliable = 0;
@@ -1741,16 +1742,15 @@ namespace Unreal.Core
 
                 if (propertyExportGroup != null)
                 {
-                    OnNetDeltaRead(new NetDeltaUpdate
-                    {
-                        Deleted = true,
-                        ChannelIndex = channelIndex,
-                        ElementIndex = elementIndex,
-                        ExportGroup = netFieldExportGroup,
-                        PropertyExport = propertyExportGroup,
-                        Handle = handle,
-                        Header = header
-                    });
+                    _deltaUpdate.Deleted = true;
+                    _deltaUpdate.ChannelIndex = channelIndex;
+                    _deltaUpdate.ElementIndex = elementIndex;
+                    _deltaUpdate.ExportGroup = netFieldExportGroup;
+                    _deltaUpdate.PropertyExport = propertyExportGroup;
+                    _deltaUpdate.Handle = handle;
+                    _deltaUpdate.Header = header;
+
+                    OnNetDeltaRead(_deltaUpdate);
                 }
             }
 
@@ -1760,16 +1760,16 @@ namespace Unreal.Core
 
                 if (ReceiveProperties(reader, propertyExportGroup, channelIndex, out INetFieldExportGroup export, !readChecksumBit, true))
                 {
-                    OnNetDeltaRead(new NetDeltaUpdate
-                    {
-                        ChannelIndex = channelIndex,
-                        ElementIndex = elementIndex,
-                        Export = export,
-                        ExportGroup = netFieldExportGroup,
-                        PropertyExport = propertyExportGroup,
-                        Handle = handle,
-                        Header = header
-                    });
+
+                    _deltaUpdate.ChannelIndex = channelIndex;
+                    _deltaUpdate.ElementIndex = elementIndex;
+                    _deltaUpdate.Export = export;
+                    _deltaUpdate.ExportGroup = netFieldExportGroup;
+                    _deltaUpdate.PropertyExport = propertyExportGroup;
+                    _deltaUpdate.Handle = handle;
+                    _deltaUpdate.Header = header;
+
+                    OnNetDeltaRead(_deltaUpdate);
                 }
             }
 
