@@ -251,6 +251,13 @@ namespace FortniteReplayReader
 
             _logger?.LogDebug($"Encountered event {info.Group} ({info.Metadata}) at {info.StartTime} of size {info.SizeInBytes}");
 
+            if (archive.NetworkVersion == 0)
+            {
+                _logger?.LogWarning($"Event occurred before header written. Ignoring ...");
+
+                return;
+            }
+
             using var decryptedReader = Decrypt((Unreal.Core.BinaryReader)archive, info.SizeInBytes);
 
             // Every event seems to start with some unknown int
