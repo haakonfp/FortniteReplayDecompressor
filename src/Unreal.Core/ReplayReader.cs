@@ -2040,6 +2040,8 @@ namespace Unreal.Core
             if (!classNetGUID.IsValid())
             {
                 bObjectDeleted = true;
+
+                return classNetGUID.Value;
             }
 
             if (bunch.Archive.EngineNetworkVersion >= EngineNetworkVersionHistory.HISTORY_SUBOBJECT_OUTER_CHAIN)
