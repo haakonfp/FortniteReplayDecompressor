@@ -663,6 +663,15 @@ namespace Unreal.Core
 
         public void SetTempEnd(int totalBits, int index = 0)
         {
+            uint setPosition = (uint)(_position + totalBits);
+
+            if(setPosition > LastBit)
+            {
+                IsError = true;
+
+                return;
+            }
+
             _tempLastBit[index] = LastBit;
             _tempPosition[index] = _position + totalBits;
             LastBit = _position + totalBits;
