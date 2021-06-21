@@ -2477,7 +2477,7 @@ namespace Unreal.Core
 
                 if (found)
                 {
-
+                    break;
                 }
 
                 reader.Reset();
