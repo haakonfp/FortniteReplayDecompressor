@@ -1760,7 +1760,7 @@ namespace Unreal.Core
 
                 if (ReceiveProperties(reader, propertyExportGroup, channelIndex, out INetFieldExportGroup export, !readChecksumBit, true))
                 {
-
+                    _deltaUpdate.Deleted = false;
                     _deltaUpdate.ChannelIndex = channelIndex;
                     _deltaUpdate.ElementIndex = elementIndex;
                     _deltaUpdate.Export = export;
