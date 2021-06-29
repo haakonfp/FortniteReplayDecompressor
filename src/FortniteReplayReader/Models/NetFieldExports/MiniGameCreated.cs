@@ -132,7 +132,7 @@ namespace FortniteReplayReader.Models.NetFieldExports
 		public bool? bAllowJoinInProgress { get; set; }
 
 		[NetFieldExport("MinigameStarter", RepLayoutCmdType.Property)]
-		public NetworkGUID MinigameStarter { get; set; }
+		public ActorGUID MinigameStarter { get; set; } //AFortPlayerState*
 
 		[NetFieldExport("bStableTeamCosmetics", RepLayoutCmdType.PropertyBool)]
 		public bool? bStableTeamCosmetics { get; set; }

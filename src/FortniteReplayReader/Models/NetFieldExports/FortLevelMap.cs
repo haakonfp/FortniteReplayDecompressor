@@ -21,6 +21,10 @@ namespace FortniteReplayReader.Models.NetFieldExports
         [NetFieldExport("AccountIdOfOwner", RepLayoutCmdType.PropertyString)]
         public string AccountIdOfOwner { get; set; }
 
+
+        [NetFieldExport("LoadedPlotInstanceId", RepLayoutCmdType.PropertyString)]
+        public string LoadedPlotInstanceId { get; set; }
+
         [NetFieldExport("bUserInitiatedLoad", RepLayoutCmdType.PropertyBool)]
         public bool? bUserInitiatedLoad { get; set; }
 
@@ -90,5 +94,34 @@ namespace FortniteReplayReader.Models.NetFieldExports
         [NetFieldExport("PlayersPerTeam", RepLayoutCmdType.PropertyInt)]
         public int? PlayersPerTeam { get; set; }
 
+    }
+
+    [NetFieldExportGroup("/Game/Playgrounds/Items/BGA_IslandPortal.BGA_IslandPortal_C", ParseType.Full)]
+    [PartialNetFieldExportGroup("/Game/Playgrounds/Items/BGA_IslandPortal")]
+    public class IslandPortal : FortLevelMap
+    {
+        [NetFieldExport("ReplicatedMovement", RepLayoutCmdType.RepMovement)]
+        public FRepMovement ReplicatedMovement { get; set; }
+
+        [NetFieldExport("bReturnToCreativeHub", RepLayoutCmdType.PropertyBool)]
+        public bool? bReturnToCreativeHub { get; set; }
+
+        [NetFieldExport("CurrentPopulation", RepLayoutCmdType.PropertyInt)]
+        public int? CurrentPopulation { get; set; }
+
+        [NetFieldExport("OwningPlayer", RepLayoutCmdType.Debug)]
+        public DebuggingObject OwningPlayer { get; set; }
+
+        [NetFieldExport("PlayersReady", RepLayoutCmdType.DynamicArray)]
+        public FUniqueNetIdRepl[] PlayersReady { get; set; } //Net ids
+
+        [NetFieldExport("TeleportLocation", RepLayoutCmdType.PropertyVector)]
+        public FVector? TeleportLocation { get; set; }
+
+        [NetFieldExport("bPortalOpen", RepLayoutCmdType.PropertyBool)]
+        public bool? bPortalOpen { get; set; }
+
+        [NetFieldExport("PlayerPawn", RepLayoutCmdType.Property)]
+        public NetworkGUID PlayerPawn { get; set; }
     }
 }

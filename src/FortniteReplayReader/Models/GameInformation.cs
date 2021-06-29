@@ -1014,7 +1014,7 @@ namespace FortniteReplayReader.Models
 
                 HealthUpdate update = new HealthUpdate
                 {
-                    Health = health,
+                    Health = (HealthSet)health.Clone(),
                     DeltaGameTimeSeconds = GameState.CurrentWorldTime - GameState.GameWorldStartTime
                 };
 

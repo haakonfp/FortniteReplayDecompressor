@@ -143,7 +143,7 @@ namespace ConsoleReader
 
             //var replayFile = "Replays/season12_arena.replay";
             //var replayFile = "Replays/season11.31.replay
-            var replayFile = "Replays/broken.replay"; //Used for testing
+            var replayFile = "Replays/pro.replay"; //Used for testing
             //var replayFile = @"C:\Users\TnT\Source\Repos\FortniteReplayDecompressor_Shiqan\src\ConsoleReader\bin\Release\netcoreapp3.1\Replays\collectPickup.replay";
 
             //var replayFile = "Replays/season11.11.replay"; //Used for testing
@@ -175,7 +175,7 @@ namespace ConsoleReader
 
             var reader = new ReplayReader(null, new FortniteReplaySettings
             {
-                PlayerLocationType = LocationTypes.None,
+                PlayerLocationType = LocationTypes.All,
             });
 
             string demoPath = Path.Combine(appData, "FortniteGame", "Saved", "Demos");
@@ -196,6 +196,8 @@ namespace ConsoleReader
                      
                     Console.WriteLine($"Elapsed: {sw.ElapsedMilliseconds}ms. Total Groups Read: {reader?.TotalGroupsRead}. Failed Bunches: {reader?.TotalFailedBunches}. Failed Replicator: {reader?.TotalFailedReplicatorReceives} Null Exports: {reader?.NullHandles} Property Errors: {reader?.PropertyError} Failed Property Reads: {reader?.FailedToRead}. Missing Properties: {reader?.MissingProperty}. Success Properties: {reader?.SuccessProperties}");
                     //Console.Write($"Pins: {MemoryBuffer.pins}");
+
+                    var player = replay.GameInformation.Players.FirstOrDefault(x => x.IsPlayersReplay);
 
                     if(i == 8)
                     {

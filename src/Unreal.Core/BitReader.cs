@@ -673,7 +673,7 @@ namespace Unreal.Core
             }
 
             _tempLastBit[index] = LastBit;
-            _tempPosition[index] = _position + totalBits;
+            _tempPosition[index] = (int)setPosition;
             LastBit = _position + totalBits;
         }
 
