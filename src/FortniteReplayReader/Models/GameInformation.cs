@@ -202,18 +202,18 @@ namespace FortniteReplayReader.Models
 
             if (gameState.StormCapState != EAthenaStormCapState.EAthenaStormCapState_MAX)
             {
-                this.UpdateStormSurges(gameState.StormCapState, GameState.CurrentWorldTime);
+                UpdateStormSurges(gameState.StormCapState, GameState.CurrentWorldTime);
             }
 
-            if(gameState.WinningTeam.HasValue)
+            if (gameState.WinningTeam.HasValue)
             {
                 GameState.WinningTeam = gameState.WinningTeam.Value;
 
-                if(_teams.TryGetValue((int)GameState.WinningTeam, out Team team))
+                if (_teams.TryGetValue((int)GameState.WinningTeam, out Team team))
                 {
-                    foreach(Player player in team.Players)
+                    foreach (Player player in team.Players)
                     {
-                        if(player.Placement == 0)
+                        if (player.Placement == 0)
                         {
                             player.Placement = 1;
                         }
@@ -221,30 +221,32 @@ namespace FortniteReplayReader.Models
                 }
             }
         }
-        
-        internal void UpdateStormSurges(EAthenaStormCapState state, float time)
+
+        private void UpdateStormSurges(EAthenaStormCapState state, float time)
         {
             if (state == EAthenaStormCapState.Clear && _stormSurges.Count == 0)
             {
                 return;
             }
-            
+
             if (state == EAthenaStormCapState.Warning || _stormSurges.Count == 0)
             {
                 _stormSurges.Add(new StormSurge());
             }
 
-            var surge = _stormSurges.Last();
+            StormSurge surge = _stormSurges.Last();
 
             // Sometimes will get duplicate states in a row, so
             // make sure we're not overriding the time
             if (state == EAthenaStormCapState.Warning && surge.WarningTime == 0)
             {
                 surge.WarningTime = time;
-            } else if (state == EAthenaStormCapState.Damaging && surge.DamageTime == 0)
+            }
+            else if (state == EAthenaStormCapState.Damaging && surge.DamageTime == 0)
             {
                 surge.DamageTime = time;
-            } else if (state == EAthenaStormCapState.Clear && surge.ClearTime == 0)
+            }
+            else if (state == EAthenaStormCapState.Clear && surge.ClearTime == 0)
             {
                 surge.ClearTime = time;
             }
@@ -1369,7 +1371,7 @@ namespace FortniteReplayReader.Models
                 currentRound = new GameRound();
                 MinigameInformation.Rounds.Add(currentRound);
             }
-            
+
             if (minigame.TeamArray != null)
             {
                 for (int i = 0; i < minigame.TeamArray.Length; i++)

@@ -33,6 +33,7 @@ namespace FortniteReplayReader.Models
         }
 
         public int MaxPlayers { get; internal set; }
+        public uint WinningTeam { get; internal set; }
 
         public float AirCraftStartTime { get; internal set; }
 
