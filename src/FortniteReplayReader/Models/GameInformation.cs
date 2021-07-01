@@ -25,6 +25,7 @@ namespace FortniteReplayReader.Models
 
         public ICollection<Llama> Llamas => _llamas.Values;
         public ICollection<SafeZone> SafeZones => _safeZones;
+        public ICollection<StormSurge> StormSurges => _stormSurges;
         public ICollection<Player> Players => _players.Values;
         public ICollection<Team> Teams => _teams.Values;
         public ICollection<SupplyDrop> SupplyDrops => _supplyDrops.Values;
@@ -65,6 +66,7 @@ namespace FortniteReplayReader.Models
 
         private Dictionary<int, Team> _teams = new Dictionary<int, Team>();
         private List<SafeZone> _safeZones = new List<SafeZone>();
+        private List<StormSurge> _stormSurges = new List<StormSurge>();
         private List<PlayerReboot> _resurrections = new List<PlayerReboot>();
         private List<KillFeedEntry> _killFeed = new List<KillFeedEntry>();
 
@@ -197,6 +199,11 @@ namespace FortniteReplayReader.Models
                 }
             }
 
+            if (gameState.StormCapState != EAthenaStormCapState.EAthenaStormCapState_MAX)
+            {
+                this.UpdateStormSurges(gameState.StormCapState, GameState.CurrentWorldTime);
+            }
+
             if(gameState.WinningTeam.HasValue)
             {
                 GameState.WinningTeam = gameState.WinningTeam.Value;
@@ -211,6 +218,34 @@ namespace FortniteReplayReader.Models
                         }
                     }
                 }
+            }
+        }
+        
+        internal void UpdateStormSurges(EAthenaStormCapState state, float time)
+        {
+            if (state == EAthenaStormCapState.Clear && _stormSurges.Count == 0)
+            {
+                return;
+            }
+            
+            if (state == EAthenaStormCapState.Warning || _stormSurges.Count == 0)
+            {
+                _stormSurges.Add(new StormSurge());
+            }
+
+            var surge = _stormSurges.Last();
+
+            // Sometimes will get duplicate states in a row, so
+            // make sure we're not overriding the time
+            if (state == EAthenaStormCapState.Warning && surge.WarningTime == 0)
+            {
+                surge.WarningTime = time;
+            } else if (state == EAthenaStormCapState.Damaging && surge.DamageTime == 0)
+            {
+                surge.DamageTime = time;
+            } else if (state == EAthenaStormCapState.Clear && surge.ClearTime == 0)
+            {
+                surge.ClearTime = time;
             }
         }
 
