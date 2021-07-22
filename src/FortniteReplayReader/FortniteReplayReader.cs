@@ -134,10 +134,7 @@ namespace FortniteReplayReader
                     Replay.GameInformation.UpdatePlayerState(channel, playerState, GuidCache.NetworkGameplayTagNodeIndex);
                     break;
                 case PlayerPawnC playerPawn:
-                    if (ParseType >= ParseType.Normal)
-                    {
-                        Replay.GameInformation.UpdatePlayerPawn(channel, playerPawn);
-                    }
+                    Replay.GameInformation.UpdatePlayerPawn(channel, playerPawn);
                     break;
                 case FortPickup fortPickup:
                     if (ParseType >= ParseType.Normal)
