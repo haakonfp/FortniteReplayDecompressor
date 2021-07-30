@@ -39,11 +39,12 @@ namespace ConsoleReader
 
         private byte[] test = new byte[100000];
 
-        [Params(/*ParseType.Minimal, ParseType.Normal,*/ ParseType.Full)]
+        [Params(ParseType.Minimal, ParseType.Normal, ParseType.Full)]
         public ParseType Type;
 
         public Benchmark()
         {
+            _reader.SetParseType("/Game/Athena/PlayerPawn_Athena.PlayerPawn_Athena_C", ParseType.Minimal);
             Random rand = new Random();
             rand.NextBytes(test);
         }
@@ -59,13 +60,13 @@ namespace ConsoleReader
         }
         */
 
-        [Benchmark]
+        //[Benchmark]
         public FortniteReplay ReadServerReplay()
         {
             return _reader.ReadReplay("Replays/server.replay", Type);
         }
 
-        [Benchmark]
+        //[Benchmark]
         public FortniteReplay ReadMassiveReplay()
         {
             return _reader.ReadReplay("Replays/massive.replay", Type);
@@ -77,7 +78,7 @@ namespace ConsoleReader
             return _reader.ReadReplay("Replays/newSeason.replay", Type);
         }
         
-        //[Benchmark]
+        [Benchmark]
         public FortniteReplay ReadShortReplay()
         {
             return _reader.ReadReplay("Replays/replay_Bow.replay", Type);
@@ -177,7 +178,7 @@ namespace ConsoleReader
             {
                 PlayerLocationType = LocationTypes.All,
             });
-
+            reader.SetParseType(typeof(PlayerPawnC), ParseType.Minimal);
             string demoPath = Path.Combine(appData, "FortniteGame", "Saved", "Demos");
 
             foreach (string path in Directory.GetFiles(@"C:\Users\TnT\Source\Repos\FortniteReplayDecompressor_Shiqan\src\ConsoleReader\bin\Release\netcoreapp3.1\Replays"))
@@ -190,7 +191,7 @@ namespace ConsoleReader
 
                     sw.Restart();
 
-                    var replay = reader.ReadReplay(replayFile, ParseType.Full);
+                    var replay = reader.ReadReplay(replayFile, ParseType.Minimal);
 
                     sw.Stop();
                      

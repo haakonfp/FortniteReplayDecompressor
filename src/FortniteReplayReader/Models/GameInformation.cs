@@ -122,7 +122,10 @@ namespace FortniteReplayReader.Models
 
         internal void UpdateSupplyDrop(uint channelId, SupplyDropC supplyDrop)
         {
-            SupplyDrop newSupplyDrop = new SupplyDrop();
+            SupplyDrop newSupplyDrop = new SupplyDrop
+            {
+                SpawnTime = GameState.DeltaGameTime
+            };
 
             if (!_supplyDrops.TryAdd(channelId, newSupplyDrop))
             {
