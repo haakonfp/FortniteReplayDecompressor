@@ -9,5 +9,6 @@ namespace FortniteReplayReader.Models
         public Stats Stats { get; internal set; }
         public TeamStats TeamStats { get; internal set; }
         public GameInformation GameInformation { get; internal set; } = new GameInformation();
+        internal IList<ExternalFortniteData> ExternalData { get; private set; } = new List<ExternalFortniteData>();
     }
 }

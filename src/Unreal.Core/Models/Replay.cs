@@ -7,6 +7,6 @@ namespace Unreal.Core.Models
     {
         public ReplayInfo Info { get; set; }
         public ReplayHeader Header { get; set; }
-        public IList<IEvent> Events { get; set; } = new List<IEvent>();
+        public IList<IEvent> Events { get; private set; } = new List<IEvent>();
     }
 }

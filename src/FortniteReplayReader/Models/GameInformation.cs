@@ -59,6 +59,8 @@ namespace FortniteReplayReader.Models
         private Dictionary<string, uint> _healthSetStartingHandles = new Dictionary<string, uint>(); //Starting handle ids for a health set
         private Dictionary<uint, Vehicle> _vehicles = new Dictionary<uint, Vehicle>(); //Channel id to vehicle
         private Dictionary<string, Player> _playerById = new Dictionary<string, Player>(); //Used only for minigame replays
+        private Dictionary<uint, ExternalFortniteData> _externalPlayerData = new Dictionary<uint, ExternalFortniteData>(); //NetGUID to External Data
+
         private Player _replayPlayer;
 
         //Delta updates
@@ -378,6 +380,11 @@ namespace FortniteReplayReader.Models
             */
         }
 
+        internal void UpdateExternalPlayerData(ExternalFortniteData fortniteData)
+        {
+            _externalPlayerData.TryAdd(fortniteData.NetGUID, fortniteData);
+        }
+
         internal void UpdatePlayerState(uint channelId, FortPlayerState playerState, NetFieldExportGroup networkGameplayTagNode)
         {
             if (playerState.bOnlySpectator == true)
@@ -387,10 +394,14 @@ namespace FortniteReplayReader.Models
 
             bool isNewPlayer = !_players.TryGetValue(channelId, out Player newPlayer);
 
-
             if (isNewPlayer)
             {
                 newPlayer = new Player();
+
+                if(_externalPlayerData.TryGetValue(playerState.ChannelActor.ActorNetGUID.Value, out ExternalFortniteData externalData))
+                {
+                    newPlayer.ExternalPlayerData = externalData.EncodedNameData;
+                }
 
                 _players.TryAdd(channelId, newPlayer);
             }
@@ -417,6 +428,7 @@ namespace FortniteReplayReader.Models
             newPlayer.Actor = playerState.ChannelActor;
 
             newPlayer.EpicId = playerState.UniqueId ?? newPlayer.EpicId;
+            //newPlayer.PrivatePlayerName = playerState.PlayerNamePrivate ?? newPlayer.PrivatePlayerName;
             newPlayer.Platform = playerState.Platform ?? newPlayer.Platform;
             newPlayer.Teamindex = playerState.TeamIndex ?? newPlayer.Teamindex;
             newPlayer.PartyOwnerEpicId = playerState.PartyOwnerUniqueId ?? newPlayer.PartyOwnerEpicId;

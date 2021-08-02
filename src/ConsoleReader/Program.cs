@@ -144,7 +144,7 @@ namespace ConsoleReader
 
             //var replayFile = "Replays/season12_arena.replay";
             //var replayFile = "Replays/season11.31.replay
-            var replayFile = "Replays/season11.11.replay"; //Used for testing
+            var replayFile = "Replays/Pro.replay"; //Used for testing
             //var replayFile = @"C:\Users\TnT\Source\Repos\FortniteReplayDecompressor_Shiqan\src\ConsoleReader\bin\Release\netcoreapp3.1\Replays\collectPickup.replay";
 
             //var replayFile = "Replays/season11.11.replay"; //Used for testing
@@ -198,8 +198,13 @@ namespace ConsoleReader
                     Console.WriteLine($"Elapsed: {sw.ElapsedMilliseconds}ms. Total Groups Read: {reader?.TotalGroupsRead}. Failed Bunches: {reader?.TotalFailedBunches}. Failed Replicator: {reader?.TotalFailedReplicatorReceives} Null Exports: {reader?.NullHandles} Property Errors: {reader?.PropertyError} Failed Property Reads: {reader?.FailedToRead}. Missing Properties: {reader?.MissingProperty}. Success Properties: {reader?.SuccessProperties}");
                     //Console.Write($"Pins: {MemoryBuffer.pins}");
 
-                    var player = replay.GameInformation.Players.FirstOrDefault(x => x.IsPlayersReplay);
+                    //var player = replay.GameInformation.Players.FirstOrDefault(x => x.IsPlayersReplay);
 
+                    foreach (var player in replay.GameInformation.Players.Where(x => !x.IsBot).OrderByDescending(x => x.DisplayName.Length))
+                    {
+                        Console.WriteLine($"{player.EpicId} - {player.DisplayName}");
+                    }
+                   
                     if(i == 8)
                     {
                         return;

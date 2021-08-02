@@ -5,7 +5,13 @@
     /// </summary>
     public class ExternalData
     {
-        public byte[] Data { get; set; }
-        public int TimeSeconds { get; set; }
+        public uint NetGUID { get; internal set; }
+        public float TimeSeconds { get; internal set; }
+        public byte[] Data { get; private set; }
+
+        public virtual void Serialize(FArchive reader, int numBytes)
+        {
+            Data = reader.ReadBytes(numBytes);
+        }
     }
 }

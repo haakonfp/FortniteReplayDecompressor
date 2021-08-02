@@ -620,42 +620,33 @@ namespace Unreal.Core
             while (true)
             {
                 var externalDataNumBits = archive.ReadIntPacked();
+
                 if (externalDataNumBits == 0)
                 {
                     return;
                 }
 
                 // Read net guid this payload belongs to
-                var netGuid = archive.ReadIntPacked();
+                uint netGuid = archive.ReadIntPacked();
+
+                ExternalData data = GetExternalData();
+
+                data.NetGUID = netGuid;
+                data.TimeSeconds = _currentPacket.TimeSeconds;
 
                 var externalDataNumBytes = (int)(externalDataNumBits + 7) >> 3;
-                //var externalData = archive.ReadBytes(externalDataNumBytes);
-                archive.SkipBytes(externalDataNumBytes);
 
-                // replayout setexternaldata
-                // https://github.com/EpicGames/UnrealEngine/blob/70bc980c6361d9a7d23f6d23ffe322a2d6ef16fb/Engine/Source/Runtime/Engine/Public/Net/RepLayout.h#L122
-                // FMemory::Memcpy(ExternalData.GetData(), Src, NumBytes);
+                data.Serialize(archive, externalDataNumBytes);
 
-                // this is a bitreader...
-                //var bitReader = new BitReader(externalData);
-                //bitReader.ReadBytes(3); // always 19 FB 01 ?
-                //var size = bitReader.ReadUInt32();
-
-                // FCharacterSample
-                // https://github.com/EpicGames/UnrealEngine/blob/70bc980c6361d9a7d23f6d23ffe322a2d6ef16fb/Engine/Source/Runtime/Engine/Private/Components/CharacterMovementComponent.cpp#L7074
-                // https://github.com/EpicGames/UnrealEngine/blob/70bc980c6361d9a7d23f6d23ffe322a2d6ef16fb/Engine/Source/Runtime/Engine/Classes/GameFramework/CharacterMovementComponent.h#L2656
-                //var location = bitReader.ReadPackedVector(10, 24);
-                //var velocity = bitReader.ReadPackedVector(10, 24);
-                //var acceleration = bitReader.ReadPackedVector(10, 24);
-                //var rotation = bitReader.ReadSerializeCompressed();
-                //var remoteViewPitch = bitReader.ReadByte();
-                //if (!bitReader.AtEnd())
-                //{
-                //    var time = bitReader.ReadSingle();
-                //}
+                OnExternalDataRead(data);
 
                 _externalDataIndex++;
             }
+        }
+
+        protected virtual ExternalData GetExternalData()
+        {
+            return new ExternalData();
         }
 
         protected virtual UnrealNames ReadHardcodedName(BitReader archive)
@@ -2539,6 +2530,7 @@ namespace Unreal.Core
         }
 
         protected abstract void OnExportRead(uint channel, INetFieldExportGroup exportGroup);
+        protected abstract void OnExternalDataRead(ExternalData data);
         protected abstract void OnNetDeltaRead(NetDeltaUpdate deltaUpdate);
         protected abstract bool ContinueParsingChannel(INetFieldExportGroup exportGroup);
         protected abstract void OnChannelActorRead(uint channel, Actor actor);
