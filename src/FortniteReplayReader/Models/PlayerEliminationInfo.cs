@@ -8,8 +8,8 @@ namespace FortniteReplayReader.Models
 {
     public class PlayerEliminationInfo
     {
-        public FVector Unknown1 { get; internal set; }
-        public FVector Unknown2 { get; internal set; }
+        public FRotator Rotation { get; internal set; }
+        public FVector Scale { get; internal set; }
         public FVector Location { get; internal set; }
         public PlayerTypes PlayerType { get; internal set; }
 

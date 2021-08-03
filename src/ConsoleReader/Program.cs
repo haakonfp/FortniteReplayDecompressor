@@ -144,7 +144,7 @@ namespace ConsoleReader
 
             //var replayFile = "Replays/season12_arena.replay";
             //var replayFile = "Replays/season11.31.replay
-            var replayFile = "Replays/Pro.replay"; //Used for testing
+            var replayFile = "Replays/loop.replay"; //Used for testing
             //var replayFile = @"C:\Users\TnT\Source\Repos\FortniteReplayDecompressor_Shiqan\src\ConsoleReader\bin\Release\netcoreapp3.1\Replays\collectPickup.replay";
 
             //var replayFile = "Replays/season11.11.replay"; //Used for testing
@@ -200,7 +200,7 @@ namespace ConsoleReader
 
                     //var player = replay.GameInformation.Players.FirstOrDefault(x => x.IsPlayersReplay);
 
-                    foreach (var player in replay.GameInformation.Players.Where(x => !x.IsBot).OrderByDescending(x => x.DisplayName.Length))
+                    foreach (var player in replay.GameInformation.Players.Where(x => !x.IsBot).OrderByDescending(x => x.DisplayName?.Length ?? 0))
                     {
                         Console.WriteLine($"{player.EpicId} - {player.DisplayName}");
                     }

@@ -7,6 +7,7 @@ using FortniteReplayReader.Models.NetFieldExports.Builds;
 using FortniteReplayReader.Models.NetFieldExports.ClassNetCaches.Custom;
 using FortniteReplayReader.Models.NetFieldExports.ClassNetCaches.Functions;
 using FortniteReplayReader.Models.NetFieldExports.ClassNetCaches.Structures;
+using FortniteReplayReader.Models.NetFieldExports.Enums;
 using FortniteReplayReader.Models.NetFieldExports.Items.Containers;
 using FortniteReplayReader.Models.NetFieldExports.Items.Weapons;
 using FortniteReplayReader.Models.NetFieldExports.Sets;
@@ -385,18 +386,18 @@ namespace FortniteReplayReader
 
                     elim.EliminatedInfo = new PlayerEliminationInfo
                     {
-                        Unknown1 = new FVector(archive.ReadSingle(), archive.ReadSingle(), archive.ReadSingle()),
+                        Rotation = new FRotator(archive.ReadSingle(), archive.ReadSingle(), archive.ReadSingle()),
                         Location = new FVector(archive.ReadSingle(), archive.ReadSingle(), archive.ReadSingle()),
-                        Unknown2 = new FVector(archive.ReadSingle(), archive.ReadSingle(), archive.ReadSingle()),
+                        Scale = new FVector(archive.ReadSingle(), archive.ReadSingle(), archive.ReadSingle()),
                     };
 
                     archive.ReadSingle(); //?
 
                     elim.EliminatorInfo = new PlayerEliminationInfo
                     {
-                        Unknown1 = new FVector(archive.ReadSingle(), archive.ReadSingle(), archive.ReadSingle()),
+                        Rotation = new FRotator(archive.ReadSingle(), archive.ReadSingle(), archive.ReadSingle()),
                         Location = new FVector(archive.ReadSingle(), archive.ReadSingle(), archive.ReadSingle()),
-                        Unknown2 = new FVector(archive.ReadSingle(), archive.ReadSingle(), archive.ReadSingle()),
+                        Scale = new FVector(archive.ReadSingle(), archive.ReadSingle(), archive.ReadSingle()),
                     };
 
                     ParsePlayer(archive, elim.EliminatedInfo);
@@ -428,7 +429,7 @@ namespace FortniteReplayReader
                     };
                 }
 
-                elim.GunType = archive.ReadByte();
+                elim.DeathCause = (EDeathCause)archive.ReadByte();
                 elim.Knocked = archive.ReadUInt32AsBoolean();
                 elim.Timestamp = info.StartTime;
 

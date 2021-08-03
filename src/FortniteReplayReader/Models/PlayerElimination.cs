@@ -1,4 +1,5 @@
 using FortniteReplayReader.Extensions;
+using FortniteReplayReader.Models.NetFieldExports.Enums;
 using System;
 using Unreal.Core.Models;
 
@@ -12,7 +13,8 @@ namespace FortniteReplayReader.Models
         public string Eliminated => EliminatedInfo?.Id;
         public string Eliminator => EliminatorInfo?.Id;
 
-        public byte GunType { get; internal set; }
+        public byte GunType => (byte)DeathCause;
+        public EDeathCause DeathCause { get; internal set; } = EDeathCause.EDeathCause_MAX;
         public string Time => Timestamp.MillisecondsToTimeStamp();
         public uint Timestamp { get; internal set; }
 
