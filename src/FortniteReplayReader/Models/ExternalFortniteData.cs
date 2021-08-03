@@ -28,18 +28,25 @@ namespace FortniteReplayReader.Models
 
             EncodedNameData.EncodedName = encodedName;
 
-            StringBuilder builder = new StringBuilder();
-
-            for (int i = 0; i < encodedName.Length; i++)
+            if (EncodedNameData.IsPlayer)
             {
-                var shift = (encodedName.Length % 4 * 3 % 8 + 1 + i) * 3 % 8;
+                StringBuilder builder = new StringBuilder();
 
-                int characterValue = encodedName[i] + shift;
+                for (int i = 0; i < encodedName.Length; i++)
+                {
+                    var shift = (encodedName.Length % 4 * 3 % 8 + 1 + i) * 3 % 8;
 
-                builder.Append((char)characterValue);
+                    int characterValue = encodedName[i] + shift;
+
+                    builder.Append((char)characterValue);
+                }
+
+                EncodedNameData.DecodedName = builder.ToString();
             }
-
-            EncodedNameData.DecodedName = builder.ToString();
+            else
+            {
+                EncodedNameData.DecodedName = EncodedNameData.EncodedName;
+            }
         }
     }
 
