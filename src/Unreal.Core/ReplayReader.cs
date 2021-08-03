@@ -192,7 +192,7 @@ namespace Unreal.Core
                 {
                     if (ParseType >= ParseType.Minimal)
                     {
-                        ReadReplayData(archive);
+                        ReadReplayData(archive, chunkSize);
                     }
                     else
                     {
@@ -390,9 +390,10 @@ namespace Unreal.Core
 
         /// <summary>
         /// see https://github.com/EpicGames/UnrealEngine/blob/70bc980c6361d9a7d23f6d23ffe322a2d6ef16fb/Engine/Source/Runtime/NetworkReplayStreaming/LocalFileNetworkReplayStreaming/Private/LocalFileNetworkReplayStreaming.cpp#L318
-        /// </summary> 
+        /// </summary>
         /// <param name="archive"></param>
-        protected virtual void ReadReplayData(FArchive archive)
+        /// <param name="chunkSize"></param>
+        protected virtual void ReadReplayData(FArchive archive, int chunkSize)
         {
             var info = new ReplayDataInfo();
             if (archive.ReplayVersion >= ReplayVersionHistory.StreamChunkTimes)
@@ -403,7 +404,7 @@ namespace Unreal.Core
             }
             else
             {
-                info.Length = archive.ReadUInt32();
+                info.Length = (uint)chunkSize;
             }
 
             int memorySizeInBytes = (int)info.Length;
