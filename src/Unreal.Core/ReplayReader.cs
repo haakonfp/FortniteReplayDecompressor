@@ -629,24 +629,20 @@ namespace Unreal.Core
                 // Read net guid this payload belongs to
                 uint netGuid = archive.ReadIntPacked();
 
-                ExternalData data = GetExternalData();
-
-                data.NetGUID = netGuid;
-                data.TimeSeconds = _currentPacket.TimeSeconds;
-
                 var externalDataNumBytes = (int)(externalDataNumBits + 7) >> 3;
 
-                data.Serialize(archive, externalDataNumBytes);
-
-                OnExternalDataRead(data);
+                ExternalData data = new ExternalData
+                {
+                    NetGUID = netGuid,
+                    TimeSeconds = _currentPacket.TimeSeconds,
+                    Data = archive.ReadBytes(externalDataNumBytes)
+                };
+                
+                //Possible for multiple for a net guid?
+                GuidCache.ExternalData[netGuid] = data;
 
                 _externalDataIndex++;
             }
-        }
-
-        protected virtual ExternalData GetExternalData()
-        {
-            return new ExternalData();
         }
 
         protected virtual UnrealNames ReadHardcodedName(BitReader archive)
@@ -794,7 +790,6 @@ namespace Unreal.Core
 
             }
         }
-
 
         /// <summary>
         /// see https://github.com/EpicGames/UnrealEngine/blob/bf95c2cbc703123e08ab54e3ceccdd47e48d224a/Engine/Source/Runtime/Engine/Private/PackageMapClient.cpp#L1571
@@ -1834,6 +1829,13 @@ namespace Unreal.Core
             Channels[channelIndex].Group.Add(group.PathName);
 #endif
 
+            ExternalData externalData = null;
+
+            if (GuidCache.ExternalData.Count > 0)
+            {
+                GuidCache.ExternalData.Remove(Channels[channelIndex].Actor.ActorNetGUID.Value, out externalData);
+            }
+
             if (!isDeltaRead) //Makes sure delta reads don't cause the channel to be ignored
             {
                 if (ParseType != ParseType.Debug && !_netFieldParser.WillReadType(group.GroupId, ParseType, out bool ignoreChannel))
@@ -1867,6 +1869,18 @@ namespace Unreal.Core
             outExport = exportGroup;
 
             outExport.ChannelActor = Channels[channelIndex].Actor;
+
+            if(externalData != null)
+            {
+                //Need to change later to a similar parsing like INetFieldExportGroup
+                if (externalData.Data.Length > 0 && group.NetFieldExports.Length > externalData.Data[0])
+                {
+                    externalData.HandleName = group.NetFieldExports[externalData.Data[0]].Name;
+                }
+
+                outExport.ExternalData = externalData;
+            }
+
 
 
             bool hasData = false;
@@ -1973,6 +1987,8 @@ namespace Unreal.Core
             {
                 Channels[channelIndex].IgnoreChannel = !ContinueParsingChannel(exportGroup);
             }
+
+            exportGroup.ExternalData = null;
 
             return true;
         }
@@ -2530,7 +2546,6 @@ namespace Unreal.Core
         }
 
         protected abstract void OnExportRead(uint channel, INetFieldExportGroup exportGroup);
-        protected abstract void OnExternalDataRead(ExternalData data);
         protected abstract void OnNetDeltaRead(NetDeltaUpdate deltaUpdate);
         protected abstract bool ContinueParsingChannel(INetFieldExportGroup exportGroup);
         protected abstract void OnChannelActorRead(uint channel, Actor actor);

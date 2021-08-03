@@ -7,11 +7,7 @@
     {
         public uint NetGUID { get; internal set; }
         public float TimeSeconds { get; internal set; }
-        public byte[] Data { get; private set; }
-
-        public virtual void Serialize(FArchive reader, int numBytes)
-        {
-            Data = reader.ReadBytes(numBytes);
-        }
+        public byte[] Data { get; internal set; }
+        public string HandleName { get; internal set; }
     }
 }

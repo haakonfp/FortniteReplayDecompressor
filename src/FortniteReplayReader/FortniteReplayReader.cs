@@ -196,16 +196,6 @@ namespace FortniteReplayReader
             }
         }
 
-        protected override void OnExternalDataRead(ExternalData data)
-        {
-            switch (data)
-            {
-                case ExternalFortniteData fortniteData:
-                    Replay.GameInformation.UpdateExternalPlayerData(fortniteData);
-                    break;
-            }
-        }
-
         protected override bool ContinueParsingChannel(INetFieldExportGroup exportGroup)
         {
             switch (exportGroup)
@@ -467,15 +457,6 @@ namespace FortniteReplayReader
                     info.Id = archive.ReadGUID(archive.ReadByte());
                     break;
             }
-        }
-
-        protected override ExternalData GetExternalData()
-        {
-            ExternalFortniteData data = new ExternalFortniteData();
-
-            Replay.ExternalData.Add(data);
-
-            return data;
         }
 
         protected override Unreal.Core.BinaryReader Decrypt(Unreal.Core.BinaryReader archive, int size)

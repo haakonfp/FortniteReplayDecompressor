@@ -59,7 +59,6 @@ namespace FortniteReplayReader.Models
         private Dictionary<string, uint> _healthSetStartingHandles = new Dictionary<string, uint>(); //Starting handle ids for a health set
         private Dictionary<uint, Vehicle> _vehicles = new Dictionary<uint, Vehicle>(); //Channel id to vehicle
         private Dictionary<string, Player> _playerById = new Dictionary<string, Player>(); //Used only for minigame replays
-        private Dictionary<uint, ExternalFortniteData> _externalPlayerData = new Dictionary<uint, ExternalFortniteData>(); //NetGUID to External Data
 
         private Player _replayPlayer;
 
@@ -380,11 +379,6 @@ namespace FortniteReplayReader.Models
             */
         }
 
-        internal void UpdateExternalPlayerData(ExternalFortniteData fortniteData)
-        {
-            _externalPlayerData.TryAdd(fortniteData.NetGUID, fortniteData);
-        }
-
         internal void UpdatePlayerState(uint channelId, FortPlayerState playerState, NetFieldExportGroup networkGameplayTagNode)
         {
             if (playerState.bOnlySpectator == true)
@@ -397,11 +391,6 @@ namespace FortniteReplayReader.Models
             if (isNewPlayer)
             {
                 newPlayer = new Player();
-
-                if(_externalPlayerData.TryGetValue(playerState.ChannelActor.ActorNetGUID.Value, out ExternalFortniteData externalData))
-                {
-                    newPlayer.ExternalPlayerData = externalData.EncodedNameData;
-                }
 
                 _players.TryAdd(channelId, newPlayer);
             }
@@ -452,6 +441,15 @@ namespace FortniteReplayReader.Models
             newPlayer.Cosmetics.ECharacterGender = playerState.CharacterGender == EFortCustomGender.EFortCustomGender_MAX ? playerState.CharacterGender : newPlayer.Cosmetics.ECharacterGender;
             newPlayer.Cosmetics.Parts = GetPathName(playerState.Parts) ?? newPlayer.Cosmetics.Parts;
             newPlayer.MovementInformation.InBus = playerState.bInAircraft ?? newPlayer.MovementInformation.InBus;
+
+            // Change how this is handled
+            if(playerState.ExternalData != null)
+            {
+                if(playerState.ExternalData.HandleName == "PlayerNamePrivate")
+                {
+                    newPlayer.ExternalPlayerData = ExternalPlayerNameData.Parse(playerState.ExternalData.Data);
+                }
+            }
 
             if (playerState.VariantRequiredCharacterParts != null)
             {

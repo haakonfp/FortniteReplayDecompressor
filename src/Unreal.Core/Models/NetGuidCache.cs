@@ -12,6 +12,7 @@ namespace Unreal.Core.Models
         public NetFieldExportGroup NetworkGameplayTagNodeIndex { get; private set; }
 
         public Dictionary<string, NetFieldExportGroup> NetFieldExportGroupMap { get; private set; } = new Dictionary<string, NetFieldExportGroup>();
+        public Dictionary<uint, ExternalData> ExternalData { get; private set; } = new Dictionary<uint, ExternalData>();
 
 
         public Dictionary<uint, NetFieldExportGroup> NetFieldExportGroupIndexToGroup { get; private set; } = new Dictionary<uint, NetFieldExportGroup>();
@@ -33,6 +34,7 @@ namespace Unreal.Core.Models
             NetFieldExportGroupMap.Clear();
             NetFieldExportGroupIndexToGroup.Clear();
             NetGuidToPathName.Clear();
+            ExternalData.Clear();
             NetworkGameplayTagNodeIndex = null;
 
             _archTypeToExportGroup.Clear();
