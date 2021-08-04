@@ -13,6 +13,19 @@ namespace Unreal.Core.Models
         public float Z { get; private set; }
         public float W { get; private set; }
 
+        public FQuat()
+        {
+
+        }
+
+        public FQuat(float x, float y, float z, float w)
+        {
+            X = x;
+            Y = y;
+            Z = z;
+            W = w;
+        }
+
         //bool FQuat::NetSerialize(FArchive& Ar, class UPackageMap*, bool& bOutSuccess)
         public void Serialize(NetBitReader reader)
         {
@@ -22,6 +35,11 @@ namespace Unreal.Core.Models
 
             float XYZMagSquared = (X * X + Y * Y + Z * Z);
             float WSquared = 1.0f - XYZMagSquared;
+        }
+
+        public override string ToString()
+        {
+            return $"X: {X}, Y: {Y}, Z: {Z}, W: {W}";
         }
     }
 }

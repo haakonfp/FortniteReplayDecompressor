@@ -342,10 +342,17 @@ namespace FortniteReplayReader
 
         protected virtual TeamStats ParseTeamStats(FArchive archive, EventInfo info)
         {
+            //Version is likely to stay at 0
+            int version = archive.ReadInt32();
+
+            if(version != 0)
+            {
+                _logger.LogWarning("Team stats version != 0");
+            }
+
             return new TeamStats()
             {
                 Info = info,
-                Unknown = archive.ReadUInt32(),
                 Position = archive.ReadUInt32(),
                 TotalPlayers = archive.ReadUInt32()
             };
@@ -353,10 +360,16 @@ namespace FortniteReplayReader
 
         protected virtual Stats ParseMatchStats(FArchive archive, EventInfo info)
         {
+            int version = archive.ReadInt32();
+
+            if (version != 0)
+            {
+                _logger.LogWarning("Match stats version != 0");
+            }
+
             return new Stats()
             {
                 Info = info,
-                Unknown = archive.ReadUInt32(),
                 Accuracy = archive.ReadSingle(),
                 Assists = archive.ReadUInt32(),
                 Eliminations = archive.ReadUInt32(),
@@ -380,57 +393,47 @@ namespace FortniteReplayReader
                     Info = info,
                 };
 
-                if (archive.EngineNetworkVersion >= EngineNetworkVersionHistory.HISTORY_FAST_ARRAY_DELTA_STRUCT && Major >= 9)
+                int version = archive.ReadInt32();
+
+                if(version >= 3)
                 {
-                    archive.SkipBytes(9);
+                    byte unknown = archive.ReadByte();
 
-                    elim.EliminatedInfo = new PlayerEliminationInfo
+                    //EventLocation
+                    if (version >= 6)
                     {
-                        Rotation = new FRotator(archive.ReadSingle(), archive.ReadSingle(), archive.ReadSingle()),
-                        Location = new FVector(archive.ReadSingle(), archive.ReadSingle(), archive.ReadSingle()),
-                        Scale = new FVector(archive.ReadSingle(), archive.ReadSingle(), archive.ReadSingle()),
-                    };
+                        elim.EliminatedInfo.Rotation = new FQuat(archive.ReadSingle(), archive.ReadSingle(), archive.ReadSingle(), archive.ReadSingle());
+                        elim.EliminatedInfo.Location = new FVector(archive.ReadSingle(), archive.ReadSingle(), archive.ReadSingle());
+                        elim.EliminatedInfo.Scale = new FVector(archive.ReadSingle(), archive.ReadSingle(), archive.ReadSingle());
+                    }
 
-                    archive.ReadSingle(); //?
+                    //InstigatorLocation
+                    elim.EliminatorInfo.Rotation = new FQuat(archive.ReadSingle(), archive.ReadSingle(), archive.ReadSingle(), archive.ReadSingle());
+                    elim.EliminatorInfo.Location = new FVector(archive.ReadSingle(), archive.ReadSingle(), archive.ReadSingle());
+                    elim.EliminatorInfo.Scale = new FVector(archive.ReadSingle(), archive.ReadSingle(), archive.ReadSingle());
 
-                    elim.EliminatorInfo = new PlayerEliminationInfo
-                    {
-                        Rotation = new FRotator(archive.ReadSingle(), archive.ReadSingle(), archive.ReadSingle()),
-                        Location = new FVector(archive.ReadSingle(), archive.ReadSingle(), archive.ReadSingle()),
-                        Scale = new FVector(archive.ReadSingle(), archive.ReadSingle(), archive.ReadSingle()),
-                    };
 
-                    ParsePlayer(archive, elim.EliminatedInfo);
-                    ParsePlayer(archive, elim.EliminatorInfo);
+                    ParsePlayer(archive, elim.EliminatedInfo, version);
+                    ParsePlayer(archive, elim.EliminatorInfo, version);
                 }
                 else
                 {
                     if (Major <= 4 && Minor < 2)
                     {
-                        archive.SkipBytes(12);
+                        //12 bytes including version int. Always all 0s
+                        archive.SkipBytes(8);
                     }
                     else if (Major == 4 && Minor <= 2)
                     {
-                        archive.SkipBytes(40);
+                        //Likely transform data with version being part of it, but don't have a replay to verify
+                        archive.SkipBytes(36);
                     }
-                    else
-                    {
-                        archive.SkipBytes(45);
-                    }
-
-                    elim.EliminatedInfo = new PlayerEliminationInfo
-                    {
-                        Id = archive.ReadFString()
-                    };
-
-                    elim.EliminatorInfo = new PlayerEliminationInfo
-                    {
-                        Id = archive.ReadFString()
-                    };
                 }
 
+
                 elim.DeathCause = (EDeathCause)archive.ReadByte();
-                elim.Knocked = archive.ReadUInt32AsBoolean();
+                elim.Knocked = archive.ReadInt32AsBoolean();
+
                 elim.Timestamp = info.StartTime;
 
                 return elim;
@@ -442,8 +445,15 @@ namespace FortniteReplayReader
             }
         }
 
-        protected virtual void ParsePlayer(FArchive archive, PlayerEliminationInfo info)
+        protected virtual void ParsePlayer(FArchive archive, PlayerEliminationInfo info, int version)
         {
+            if(version < 6)
+            {
+                info.Id = archive.ReadFString();
+
+                return;
+            }
+
             info.PlayerType = archive.ReadByteAsEnum<PlayerTypes>();
 
             switch (info.PlayerType)
@@ -456,6 +466,9 @@ namespace FortniteReplayReader
                     break;
                 case PlayerTypes.Player:
                     info.Id = archive.ReadGUID(archive.ReadByte());
+                    break;
+                default:
+                    _logger.LogWarning($"Unknown player type {info.PlayerType}");
                     break;
             }
         }

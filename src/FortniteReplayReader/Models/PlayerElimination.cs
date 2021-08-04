@@ -7,8 +7,8 @@ namespace FortniteReplayReader.Models
 {
     public class PlayerElimination : BaseEvent, IEquatable<PlayerElimination>
     {
-        public PlayerEliminationInfo EliminatedInfo { get; internal set; }
-        public PlayerEliminationInfo EliminatorInfo { get; internal set; }
+        public PlayerEliminationInfo EliminatedInfo { get; internal set; } = new PlayerEliminationInfo();
+        public PlayerEliminationInfo EliminatorInfo { get; internal set; } = new PlayerEliminationInfo();
 
         public string Eliminated => EliminatedInfo?.Id;
         public string Eliminator => EliminatorInfo?.Id;
