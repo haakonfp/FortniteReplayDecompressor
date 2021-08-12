@@ -40,13 +40,13 @@ namespace FortniteReplayReader.Models
 
                     decodedName += (char)(nameData.EncodedName[i] + shift);
                 }
+
+                nameData.DecodedName = decodedName;
             }
             else
             {
                 nameData.DecodedName = nameData.EncodedName;
             }
-
-            nameData.DecodedName = decodedName;
 
             return nameData;
         }
