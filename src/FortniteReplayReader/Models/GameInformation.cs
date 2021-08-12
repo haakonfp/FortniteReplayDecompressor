@@ -837,7 +837,7 @@ namespace FortniteReplayReader.Models
 
             foreach (FGameplayTagContainer tagContainer in poiManager.PoiTagContainerTable)
             {
-                tagContainer.UpdateTags(networkGameplayTagNode);
+                tagContainer?.UpdateTags(networkGameplayTagNode);
             }
 
             GameState.PoiManager = (FortPoiManager)poiManager.Clone();
