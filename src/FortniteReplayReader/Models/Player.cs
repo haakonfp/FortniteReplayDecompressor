@@ -66,6 +66,7 @@ namespace FortniteReplayReader.Models
         internal PlayerMovementInformation MovementInformation { get; set; } = new PlayerMovementInformation();
         internal float InitialMovementTimestamp { get; set; }
         internal ExternalPlayerNameData ExternalPlayerData { get; set; }
+        internal bool ChannelClosed { get; set; }
     }
 
     public class PlayerLocation

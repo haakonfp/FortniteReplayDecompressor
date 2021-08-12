@@ -52,8 +52,8 @@ namespace FortniteReplayReader.Models
         private Dictionary<uint, Player> _players = new Dictionary<uint, Player>(); //Channel id to Player
         private Dictionary<uint, PlayerPawn> _playerPawns = new Dictionary<uint, PlayerPawn>(); //Channel Id (player pawn) to Actor
         private Dictionary<uint, List<QueuedPlayerPawn>> _queuedPlayerPawns = new Dictionary<uint, List<QueuedPlayerPawn>>();
-        private Dictionary<uint, Weapon> _weapons = new Dictionary<uint, Weapon>(); //Channel to 
-        private Dictionary<uint, Weapon> _unknownWeapons = new Dictionary<uint, Weapon>(); //Channel to Weapon
+        private Dictionary<uint, Weapon> _weapons = new Dictionary<uint, Weapon>(); //Channel to weapon
+        private Dictionary<uint, Weapon> _unknownWeapons = new Dictionary<uint, Weapon>(); //Channel to weapon
         private Dictionary<uint, object> _containers = new Dictionary<uint, object>(); //Channel to searchable containers
         private Dictionary<uint, PlayerStructure> _playerStructures = new Dictionary<uint, PlayerStructure>(); //Channel to player structures
         private Dictionary<string, uint> _healthSetStartingHandles = new Dictionary<string, uint>(); //Starting handle ids for a health set
@@ -61,6 +61,7 @@ namespace FortniteReplayReader.Models
         private Dictionary<string, Player> _playerById = new Dictionary<string, Player>(); //Used only for minigame replays
 
         private Player _replayPlayer;
+        private uint _closedPlayerChannelId = uint.MaxValue; //Used to keep the players in the "Players" list when the channel is closed
 
         //Delta updates
         private Dictionary<uint, NetDeltaArray<PrivateTeamInfo>> _privateTeamInfo = new Dictionary<uint, NetDeltaArray<PrivateTeamInfo>>(); //Channel id to private team info
@@ -76,6 +77,11 @@ namespace FortniteReplayReader.Models
 
         internal void ChannelClosed(uint channel)
         {
+            if(_players.TryGetValue(channel, out Player player))
+            {
+                player.ChannelClosed = true;
+            }
+
             _playerPawns.Remove(channel);
             _vehicles.Remove(channel);
             _weapons.Remove(channel);
@@ -386,13 +392,19 @@ namespace FortniteReplayReader.Models
                 return;
             }
 
-            bool isNewPlayer = !_players.TryGetValue(channelId, out Player newPlayer);
+            bool isNewPlayer = !_players.TryGetValue(channelId, out Player newPlayer) || newPlayer.ChannelClosed;
 
             if (isNewPlayer)
             {
+                //Channel is being replaced by a new player. Store the old player
+                if(newPlayer?.ChannelClosed == true)
+                {
+                    _players.Add(_closedPlayerChannelId--, newPlayer);
+                }
+
                 newPlayer = new Player();
 
-                _players.TryAdd(channelId, newPlayer);
+                _players[channelId] = newPlayer;
             }
 
             if (networkGameplayTagNode != null)
@@ -489,6 +501,7 @@ namespace FortniteReplayReader.Models
                     newPlayer.Team = team;
                 }
             }
+
 
             //Add to killfeed
             if (playerState.bDBNO != null || playerState.FinisherOrDowner != null || playerState.RebootCounter != null)
@@ -693,7 +706,7 @@ namespace FortniteReplayReader.Models
                         {
                             Weapon weapon = new Weapon();
 
-                            _unknownWeapons.Add(playerPawnC.CurrentWeapon.Value, weapon);
+                            _unknownWeapons.TryAdd(playerPawnC.CurrentWeapon.Value, weapon);
 
                             playerActor.WeaponSwitches.Add(new WeaponSwitch
                             {
