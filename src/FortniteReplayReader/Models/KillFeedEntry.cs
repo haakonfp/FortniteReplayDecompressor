@@ -204,6 +204,24 @@ namespace FortniteReplayReader.Models
                     case "Pawn.Athena.NPC.Wildlife.Predator.Grandma":
                         ItemType = ItemType.Wolf;
                         break;
+                    case "Item.Weapon.Ranged.Assault.PastaRipper":
+                        ItemType = ItemType.SlonePulseRifle;
+                        break;
+                    case "Item.Weapon.Ranged.Scooter":
+                        ItemType = ItemType.ReconScanner;
+                        break;
+                    case "Item.Weapon.Ranged.Sniper.ReactorGrade":
+                        ItemType = ItemType.RailGun;
+                        break;
+                    case "Item.Weapon.Ranged.Assault.LlamaRoasterV3":
+                        ItemType = ItemType.KymeraRayGun;
+                        break;
+                    case "Item.Weapon.Ranged.Shotgun.Swing.LowTier":
+                        ItemType = ItemType.LeverShotgun;
+                        break;
+                    case "Item.Weapon.Ranged.Shotgun.Swing.HighTier":
+                        ItemType = ItemType.LeverShotgun;
+                        break;
                     case "Gameplay.Effect.InstantDeath.Environment.UnderLandscape":
                         break;
                     case "Gameplay.Effect.InstantDeath.Environment":

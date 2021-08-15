@@ -11,6 +11,7 @@ namespace FortniteReplayReader.Models.Enums
         MakeshiftAssaultRifle, MakeshiftSmg, MakeshiftShotgun, MakeshiftRevolver, MakeshiftBow,
         PrimalAssaultRifle, PrimalSmg, PrimalShotgun, PrimalRevolver, PrimalBow, StinkBow,
         FlameBow, MechBow, MechExplosiveBow, MetalBow,
-        Recycler, Shark, Raptor, Wolf
+        Recycler, Shark, Raptor, Wolf,
+        SlonePulseRifle, ReconScanner, RailGun, LlamaRoasterV3, KymeraRayGun, LeverShotgun
     };
 }
