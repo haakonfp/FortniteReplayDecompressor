@@ -222,6 +222,55 @@ namespace FortniteReplayReader.Models
                     case "Item.Weapon.Ranged.Shotgun.Swing.HighTier":
                         ItemType = ItemType.LeverShotgun;
                         break;
+                    case "Item.Weapon.Ranged.Pistol.Tracker":
+                        ItemType = ItemType.TrackerPistol;
+                        break;
+                    case "Item.Weapon.Ranged.Bow.Shockwave":
+                        ItemType = ItemType.ShockwaveBow;
+                        break;
+                    case "Item.Weapon.Ranged.Bow.Grappler":
+                        ItemType = ItemType.GrapplerBow;
+                        break;
+                    case "Gameplay.Damage.Elemental.Fire":
+                        ItemType = ItemType.Fire;
+                        break;
+                    case "Item.Weapon.Ranged.Shotgun.Dub":
+                        ItemType = ItemType.DubShotgun;
+                        break;
+                    case "Item.Weapon.Ranged.Launcher.Egg":
+                        ItemType = ItemType.EggLauncher;
+                        break;
+                    case "Gameplay.Damage.Physical.Explosive":
+                    case "EnvItem.ReactiveProp.PropaneTank":
+                        ItemType = ItemType.EnvironmentExplosion;
+                        break;
+                    case "Gameplay.Damage.Physical.Explosive.Gas":
+                    case "Item.Fuel.PetrolPickup":
+                        ItemType = ItemType.EnvironmentExplosiveGas;
+                        break;
+                    case "Item.Weapon.Vehicle.Meatball":
+                        ItemType = ItemType.Boat;
+                        break;
+                    case "Item.Weapon.Galileo.Lobster.Limo":
+                    case "Item.Weapon.Galileo.Lobster":
+                    case "Item.Weapon.Galileo.Lobster.Kayak":
+                        ItemType = ItemType.Lightsaber;
+                        break;
+                    case "Item.Weapon.Galileo.Bun":
+                        ItemType = ItemType.E11BlasterRifle;
+                        break;
+                    case "Building.Type.Prop":
+                    case "Building.Type.Container":
+                        ItemType = ItemType.BuildingProp;
+                        break;
+                    case "GameplayCue.Abilities.TractorBeam":
+                    case "Gameplay.Status.TractorBeam":
+                        ItemType = ItemType.Ufo;
+                        break;
+                    case "Ability.HighTower.Power.Date.ChainLightning":
+                    case "Ability.HighTower.Power.Date.BallLightning":
+                        ItemType = ItemType.Ability;
+                        break;
                     case "Gameplay.Effect.InstantDeath.Environment.UnderLandscape":
                         break;
                     case "Gameplay.Effect.InstantDeath.Environment":

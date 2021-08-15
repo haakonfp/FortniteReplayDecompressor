@@ -12,6 +12,8 @@ namespace FortniteReplayReader.Models.Enums
         PrimalAssaultRifle, PrimalSmg, PrimalShotgun, PrimalRevolver, PrimalBow, StinkBow,
         FlameBow, MechBow, MechExplosiveBow, MetalBow,
         Recycler, Shark, Raptor, Wolf,
-        SlonePulseRifle, ReconScanner, RailGun, LlamaRoasterV3, KymeraRayGun, LeverShotgun
+        SlonePulseRifle, ReconScanner, RailGun, LlamaRoasterV3, KymeraRayGun, LeverShotgun,
+        TrackerPistol, ShockwaveBow, GrapplerBow, Fire, DubShotgun, EggLauncher, EnvironmentExplosion, EnvironmentExplosiveGas, Boat,
+        Lightsaber, E11BlasterRifle, BuildingProp, Ufo, Ability
     };
 }
