@@ -2430,13 +2430,19 @@ namespace Unreal.Core
         {
             if (!Replay.Info.IsCompressed)
             {
-                var uncompressed = new Core.BinaryReader(new MemoryStream(archive.ReadBytes(size)))
+                //Not the best way as it's 2 rents, but it works for now
+                var uncompressedMemoryBuffer = archive.GetMemoryBuffer(size);
+
+                var uncompressed = new Core.BinaryReader(size)
                 {
                     EngineNetworkVersion = Replay.Header.EngineNetworkVersion,
                     NetworkVersion = Replay.Header.NetworkVersion,
                     ReplayHeaderFlags = Replay.Header.Flags,
                     ReplayVersion = Replay.Info.FileVersion
                 };
+
+                uncompressedMemoryBuffer.Stream.CopyTo(uncompressed.BaseStream);
+                uncompressed.BaseStream.Seek(0, SeekOrigin.Begin);
 
                 return uncompressed;
             }

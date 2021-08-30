@@ -22,7 +22,7 @@ namespace Unreal.Core.Models
         public MemoryBuffer(byte* pointer, int length)
         {
             PositionPointer = pointer;
-            //Stream = new UnmanagedMemoryStream(pointer, length, length, FileAccess.ReadWrite);
+            Stream = new UnmanagedMemoryStream(pointer, length, length, FileAccess.ReadWrite);
             Size = length;
         }
 
