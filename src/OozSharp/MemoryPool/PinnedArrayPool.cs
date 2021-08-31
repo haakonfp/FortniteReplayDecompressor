@@ -98,6 +98,12 @@ namespace OozSharp.MemoryPool
                     {
                         tlsBuckets[bucketIndex] = null;
 
+                        // A lock is more expensive, so simply check if it's already "disposed"
+                        if (buffer.Memory.IsEmpty)
+                        {
+                            return Rent(minimumLength);
+                        }
+
                         return buffer;
                     }
                 }
@@ -109,6 +115,12 @@ namespace OozSharp.MemoryPool
                     buffer = b.TryPop();
                     if (buffer != null)
                     {
+                        // A lock is more expensive, so simply check if it's already "disposed"
+                        if (buffer.Memory.IsEmpty)
+                        {
+                            return Rent(minimumLength);
+                        }
+
                         return buffer;
                     }
                 }
@@ -206,7 +218,7 @@ namespace OozSharp.MemoryPool
                 {
                     PinnedMemory<T>[] buckets = tlsBuckets.Key;
 
-                    for(int i = 0; i < buckets.Length; i++)
+                    for (int i = 0; i < buckets.Length; i++)
                     {
                         buckets[i]?.Dispose();
                         buckets[i] = null;

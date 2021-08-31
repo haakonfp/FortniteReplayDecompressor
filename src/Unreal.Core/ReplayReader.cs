@@ -820,7 +820,6 @@ namespace Unreal.Core
                             NetFieldExportsLength = numExports
                         };
 
-                        // TODO: 0 is reserved !?
                         group.NetFieldExports = new NetFieldExport[numExports];
 
                         GuidCache.AddToExportGroupMap(pathName, group);

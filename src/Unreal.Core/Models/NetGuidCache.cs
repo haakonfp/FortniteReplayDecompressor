@@ -66,8 +66,10 @@ namespace Unreal.Core.Models
             {
                 if (group.StartsWith(partialRedirectKvp.Key, StringComparison.Ordinal))
                 {
-                    _partialPathNames.TryAdd(group, Utilities.RemoveAllPathPrefixes(partialRedirectKvp.Value));
-                    _partialPathNames.TryAdd(Utilities.RemoveAllPathPrefixes(group), Utilities.RemoveAllPathPrefixes(partialRedirectKvp.Value));
+                    string cleanedPartialPath = Utilities.RemoveAllPathPrefixes(partialRedirectKvp.Value);
+
+                    _partialPathNames.TryAdd(group, cleanedPartialPath);
+                    _partialPathNames.TryAdd(exportGroup.CleanedPath, cleanedPartialPath);
 
                     break;
                 }
@@ -83,10 +85,12 @@ namespace Unreal.Core.Models
 
         public NetFieldExportGroup GetNetFieldExportGroup(string pathName)
         {
+            /*
             if (String.IsNullOrEmpty(pathName))
             {
                 return null;
             }
+            */
 
             if (NetFieldExportGroupMap.TryGetValue(pathName, out NetFieldExportGroup netFieldExportGroup))
             {
