@@ -51,8 +51,8 @@ namespace FortniteReplayReader.Models.NetFieldExports
         [NetFieldExport("PawnForReplayRelevancy", RepLayoutCmdType.Ignore)]
         public uint? PawnForReplayRelevancy { get; set; } //Type: AFortPawn* Bits: 16
 
-        [NetFieldExport("RecorderPlayerState", RepLayoutCmdType.Ignore)]
-        public uint? RecorderPlayerState { get; set; } //Type: AFortPlayerState* Bits: 8
+        [NetFieldExport("RecorderPlayerState", RepLayoutCmdType.Property)]
+        public ActorGUID RecorderPlayerState { get; set; } //Type: AFortPlayerState* Bits: 8
 
         [NetFieldExport("GlobalEnvironmentAbilityActor", RepLayoutCmdType.Ignore)]
         public uint? GlobalEnvironmentAbilityActor { get; set; } //Type: AFortGlobalEnvironmentAbilityActor* Bits: 8

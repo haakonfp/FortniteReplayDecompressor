@@ -16,6 +16,7 @@ namespace FortniteReplayReader.Models
         public int TotalBots { get; internal set; }
         public FortPoiManager PoiManager { get; internal set; }
         public string PlaylistId { get; internal set; }
+        public Player ReplayRecorder { get; internal set; }
 
         public int TotalTeams { get; internal set; }
         public int TeamSize
@@ -57,5 +58,6 @@ namespace FortniteReplayReader.Models
         internal float ElapsedTime { get; set; } //Time since last update?
         internal int OldTeamSize { get; set; } //Used in older replays
         internal float DeltaGameTime => CurrentWorldTime - GameWorldStartTime;
+        internal uint RecorderActor { get; set; }
     }
 }
