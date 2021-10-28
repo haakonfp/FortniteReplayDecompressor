@@ -50,7 +50,7 @@ namespace Unreal.Core.Models
             }
 
             //Easiest way to do this update
-            if(group.EndsWith("ClassNetCache"))
+            if (group.EndsWith("ClassNetCache"))
             {
                 exportGroup.PathName = Utilities.RemoveAllPathPrefixes(exportGroup.PathName);
             }
@@ -129,6 +129,51 @@ namespace Unreal.Core.Models
             }
             else
             {
+                return group;
+            }
+        }
+
+        public NetFieldExportGroup GetStaticNetFieldExportGroup(uint guid, out string staticActorId)
+        {
+            staticActorId = null;
+
+            if (!_archTypeToExportGroup.TryGetValue(guid, out NetFieldExportGroup group))
+            {
+                if (!NetGuidToPathName.ContainsKey(guid))
+                {
+                    return null;
+                }
+
+                staticActorId = NetGuidToPathName[guid];
+
+                string path = Utilities.CleanPathSuffix(staticActorId);
+                path = _parser.GetPathFromStaticActorId(path);
+
+                if (path == null)
+                {
+                    return null;
+                }
+
+                path = CoreRedirects.GetRedirect(path);
+
+                if (_partialPathNames.TryGetValue(path, out string redirectPath))
+                {
+                    path = redirectPath;
+                }
+
+                if (NetFieldExportGroupMap.TryGetValue(path, out var exportGroup))
+                {
+                    _archTypeToExportGroup[guid] = exportGroup;
+
+                    return exportGroup;
+                }
+
+                return null;
+            }
+            else
+            {
+                NetGuidToPathName.TryGetValue(guid, out staticActorId);
+
                 return group;
             }
         }

@@ -415,6 +415,7 @@ namespace Unreal.Core
 
                 NetFieldExportGroupAttribute attribute = type.GetCustomAttribute<NetFieldExportGroupAttribute>();
                 PlayerControllerAttribute playerController = type.GetCustomAttribute<PlayerControllerAttribute>();
+                NetFieldExportStaticGroupAttribute[] staticIds = (NetFieldExportStaticGroupAttribute[])type.GetCustomAttributes<NetFieldExportStaticGroupAttribute>();
 
                 if (playerController != null)
                 {
@@ -430,6 +431,11 @@ namespace Unreal.Core
 
                 _parserInfo.NetFieldGroups.Add(attribute.Path, info);
 
+                foreach (NetFieldExportStaticGroupAttribute staticId in staticIds)
+                {
+                    _parserInfo.StaticActorIdToPath.Add(staticId.StaticActorId, Utilities.RemoveAllPathPrefixes(attribute.Path));
+                }
+
                 info.TypeId = _parserInfo.LinqCache.AddExportType(info.Type);
 
                 foreach (PropertyInfo property in type.GetProperties())
@@ -442,7 +448,7 @@ namespace Unreal.Core
                         continue;
                     }
 
-                    if(netFieldExportHandleAttribute != null)
+                    if (netFieldExportHandleAttribute != null)
                     {
                         info.HandleProperties[netFieldExportHandleAttribute.Handle] = new NetFieldInfo
                         {
@@ -612,13 +618,13 @@ namespace Unreal.Core
 
         internal void ReadField(INetFieldExportGroup obj, NetFieldExport export, NetFieldExportGroup exportGroup, uint handle, NetBitReader netBitReader, bool singleInstance = true)
         {
-            if(export.PropertyId == -2)
+            if (export.PropertyId == -2)
             {
                 return;
             }
 
             string fixedExportName = export.Name;
-            
+
             bool isDebug = obj is DebuggingExportGroup;
             int groupId = exportGroup.GroupId;
 
@@ -641,7 +647,7 @@ namespace Unreal.Core
             {
                 int propertyIndex = export.PropertyId;
 
-                if(export.PropertyId == -1)
+                if (export.PropertyId == -1)
                 {
                     if (!netGroupInfo.Properties.TryGetIndex(fixedExportName, out propertyIndex))
                     {
@@ -654,7 +660,7 @@ namespace Unreal.Core
 
                 netFieldInfo = netGroupInfo.Properties[propertyIndex];
             }
-            
+
             if (netGroupInfo.UsesHandles && !netGroupInfo.HandleProperties.TryGetValue(handle, out netFieldInfo))
             {
                 //Clean this up
@@ -670,7 +676,7 @@ namespace Unreal.Core
             SetType(obj, netFieldInfo, netGroupInfo, exportGroup, handle, netBitReader, singleInstance);
         }
 
-        private void SetType(INetFieldExportGroup obj, NetFieldInfo netFieldInfo, NetFieldGroupInfo groupInfo, NetFieldExportGroup exportGroup, 
+        private void SetType(INetFieldExportGroup obj, NetFieldInfo netFieldInfo, NetFieldGroupInfo groupInfo, NetFieldExportGroup exportGroup,
             uint handle, NetBitReader netBitReader, bool singleInstance)
         {
             object data;
@@ -793,7 +799,7 @@ namespace Unreal.Core
                 case RepLayoutCmdType.Debug:
                     data = _parserInfo.LinqCache.CreatePropertyObject(typeof(DebuggingObject));
                     (data as IProperty).Serialize(netBitReader);
-                    
+
                     break;
             }
 
@@ -803,8 +809,8 @@ namespace Unreal.Core
         private Array ReadArrayField(NetFieldExportGroup netfieldExportGroup, NetFieldInfo fieldInfo, NetFieldGroupInfo groupInfo, NetBitReader netBitReader)
         {
             uint arrayIndexes = netBitReader.ReadIntPacked();
-            
-            if(arrayIndexes == 0)
+
+            if (arrayIndexes == 0)
             {
                 netBitReader.Seek(netBitReader.GetBitsLeft(), SeekOrigin.Current);
 
@@ -925,7 +931,7 @@ namespace Unreal.Core
 
             var cachedEntry = _objects[exportGroup.TypeId];
 
-            if(cachedEntry.Instance is IHandleNetFieldExportGroup handleGroup)
+            if (cachedEntry.Instance is IHandleNetFieldExportGroup handleGroup)
             {
                 handleGroup.UnknownHandles.Clear();
             }
@@ -1002,6 +1008,13 @@ namespace Unreal.Core
             return new string(newChars, 0, (int)(currentChar - newChars));
         }
 
+        public string GetPathFromStaticActorId(string staticId)
+        {
+            _parserInfo.StaticActorIdToPath.TryGetValue(staticId, out string path);
+
+            return path;
+        }
+
         private sealed class NetFieldGroupInfo
         {
             public NetFieldExportGroupAttribute Attribute { get; set; }
@@ -1037,6 +1050,7 @@ namespace Unreal.Core
         private sealed class NetFieldParserInfo
         {
             public KeyList<string, NetFieldGroupInfo> NetFieldGroups { get; private set; } = new KeyList<string, NetFieldGroupInfo>();
+            public KeyList<string, string> StaticActorIdToPath { get; private set; } = new KeyList<string, string>();
 
             public Dictionary<Type, RepLayoutCmdType> PrimitiveTypeLayout { get; private set; } =
             new Dictionary<Type, RepLayoutCmdType>();
