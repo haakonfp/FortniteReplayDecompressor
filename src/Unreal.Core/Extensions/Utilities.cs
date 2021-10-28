@@ -27,7 +27,7 @@ namespace Unreal.Core.Extensions
         }
 
         //Removes all numbers and underscores from suffix
-        private static string CleanPathSuffix(string path)
+        public static string CleanPathSuffix(string path)
         {
             for (int i = path.Length - 1; i >= 0; i--)
             {

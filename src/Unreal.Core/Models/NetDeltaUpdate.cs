@@ -17,5 +17,6 @@ namespace Unreal.Core.Models
         public NetFieldExportGroup ExportGroup { get; internal set; }
         public NetFieldExportGroup PropertyExport { get; internal set; }
         public uint Handle { get; internal set; }
+        public string StaticActorId { get; internal set;}
     }
 }
