@@ -485,6 +485,13 @@ namespace Unreal.Core
                 header.Changelist = archive.ReadUInt32();
             }
 
+            if (header.NetworkVersion >= NetworkVersionHistory.HISTORY_SAVE_PACKAGE_VERSION_UE)
+            {
+                header.UE4Version = archive.ReadUInt32();
+                header.UE5Version = archive.ReadUInt32();
+                header.PackageVersionLicenseeUE = archive.ReadUInt32();
+            }
+
             if (header.NetworkVersion <= NetworkVersionHistory.HISTORY_MULTIPLE_LEVELS)
             {
                 throw new NotImplementedException();

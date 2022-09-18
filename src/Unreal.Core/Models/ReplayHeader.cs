@@ -16,6 +16,12 @@ namespace Unreal.Core.Models
         public ushort Minor { get; set; }
         public ushort Patch { get; set; }
         public uint Changelist { get; set; }
+        
+        public uint UE4Version { get; set; }
+        
+        public uint UE5Version { get; set; }
+        
+        public uint PackageVersionLicenseeUE { get; set; }
         public string Branch { get; set; }
         public (string, uint)[] LevelNamesAndTimes { get; set; }
         public ReplayHeaderFlags Flags { get; set; }
