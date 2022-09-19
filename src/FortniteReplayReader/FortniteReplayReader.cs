@@ -384,23 +384,48 @@ namespace FortniteReplayReader
 
                 if (archive.EngineNetworkVersion >= EngineNetworkVersionHistory.HISTORY_FAST_ARRAY_DELTA_STRUCT && Major >= 9)
                 {
-                    archive.SkipBytes(9);
-
-                    elim.EliminatedInfo = new PlayerEliminationInfo
+                    if (archive.EngineNetworkVersion >= EngineNetworkVersionHistory.HISTORY_PACKED_VECTOR_LWC_SUPPORT)
                     {
-                        Unknown1 = new FVector(archive.ReadSingle(), archive.ReadSingle(), archive.ReadSingle()),
-                        Location = new FVector(archive.ReadSingle(), archive.ReadSingle(), archive.ReadSingle()),
-                        Unknown2 = new FVector(archive.ReadSingle(), archive.ReadSingle(), archive.ReadSingle()),
-                    };
+                        // Skip: 5 Unknown Bytes, 1 Double (Unknown), 1 FVector (Unknown)
+                        archive.SkipBytes(5 + 8 + 3 * 8);
 
-                    archive.ReadSingle(); //?
+                        elim.EliminatedInfo = new PlayerEliminationInfo
+                        {
+                            Location = new FVector(archive.ReadDouble(), archive.ReadDouble(), archive.ReadDouble()),
+                        };
 
-                    elim.EliminatorInfo = new PlayerEliminationInfo
+                        // Skip: 1 FVector (Unknown), 1 Double (Unknown), 1 FVector (Unknown)
+                        archive.SkipBytes(3 * 8 + 8 + 3 * 8);
+
+                        elim.EliminatorInfo = new PlayerEliminationInfo
+                        {
+                            Location = new FVector(archive.ReadDouble(), archive.ReadDouble(), archive.ReadDouble()),
+                        };
+
+                        // Skip: 1 FVector (Unknown)
+                        archive.SkipBytes(3 * 8);
+                    }
+                    else
                     {
-                        Unknown1 = new FVector(archive.ReadSingle(), archive.ReadSingle(), archive.ReadSingle()),
-                        Location = new FVector(archive.ReadSingle(), archive.ReadSingle(), archive.ReadSingle()),
-                        Unknown2 = new FVector(archive.ReadSingle(), archive.ReadSingle(), archive.ReadSingle()),
-                    };
+                        // Skip: 5 Unknown Bytes, 1 Float (Unknown), 1 FVector (Unknown)
+                        archive.SkipBytes(5 + 4 + 3 * 4);
+
+                        elim.EliminatedInfo = new PlayerEliminationInfo
+                        {
+                            Location = new FVector(archive.ReadSingle(), archive.ReadSingle(), archive.ReadSingle()),
+                        };
+
+                        // Skip: 1 FVector (Unknown), 1 Float (Unknown), 1 FVector (Unknown)
+                        archive.SkipBytes(3 * 4 + 4 + 3 * 4);
+
+                        elim.EliminatorInfo = new PlayerEliminationInfo
+                        {
+                            Location = new FVector(archive.ReadSingle(), archive.ReadSingle(), archive.ReadSingle()),
+                        };
+
+                        // Skip: 1 FVector (Unknown)
+                        archive.SkipBytes(3 * 4);
+                    }
 
                     ParsePlayer(archive, elim.EliminatedInfo);
                     ParsePlayer(archive, elim.EliminatorInfo);
