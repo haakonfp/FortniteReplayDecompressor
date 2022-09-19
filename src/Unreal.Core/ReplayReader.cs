@@ -1372,7 +1372,7 @@ namespace Unreal.Core
                             }
                             else
                             {
-                                return new FVector(bunch.Archive.ReadSingle(), bunch.Archive.ReadSingle(), bunch.Archive.ReadSingle());
+                                return new FVector(bunch.Archive.ReadDouble(), bunch.Archive.ReadDouble(), bunch.Archive.ReadDouble());
                             }
                         }
                         else

@@ -38,6 +38,16 @@ namespace Unreal.Core.Models
         /// If set, additional physic data (angular velocity) will be replicated.
         /// </summary>
         public bool bRepPhysics { get; set; }
+        
+        /// <summary>
+        /// Server physics step
+        /// </summary>
+        public uint ServerFrame { get; set; } 
+        
+        /// <summary>
+        /// ID assigned by server used to ensure determinism by physics.
+        /// </summary>
+        public uint ServerPhysicsHandle { get; set; } 
 
         /// <summary>
         /// Allows tuning the compression level for the replicated location vector. You should only need to change this from the default if you see visual artifacts.
