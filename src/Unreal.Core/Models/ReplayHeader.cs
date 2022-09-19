@@ -26,6 +26,10 @@ namespace Unreal.Core.Models
         public (string, uint)[] LevelNamesAndTimes { get; set; }
         public ReplayHeaderFlags Flags { get; set; }
         public string[] GameSpecificData { get; set; }
+        
+        public string Platform { get; set; }
+        
+        public BuildTargetType BuildTargetType { get; set; }
 
         public bool HasLevelStreamingFixes()
         {
