@@ -1372,7 +1372,17 @@ namespace Unreal.Core
                             }
                             else
                             {
-                                return new FVector(bunch.Archive.ReadDouble(), bunch.Archive.ReadDouble(), bunch.Archive.ReadDouble());
+                                if (bunch.Archive.EngineNetworkVersion >=
+                                    EngineNetworkVersionHistory.HISTORY_PACKED_VECTOR_LWC_SUPPORT)
+                                {
+                                    return new FVector(bunch.Archive.ReadDouble(), bunch.Archive.ReadDouble(),
+                                        bunch.Archive.ReadDouble());
+                                }
+                                else
+                                {
+                                    return new FVector(bunch.Archive.ReadSingle(), bunch.Archive.ReadSingle(),
+                                        bunch.Archive.ReadSingle()); 
+                                }
                             }
                         }
                         else

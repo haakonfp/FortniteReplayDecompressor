@@ -152,7 +152,14 @@ namespace Unreal.Core
 
         public FVector SerializePropertyVector()
         {
-            return new FVector(ReadDouble(), ReadDouble(), ReadDouble());
+            if (EngineNetworkVersion >= EngineNetworkVersionHistory.HISTORY_PACKED_VECTOR_LWC_SUPPORT)
+            {
+                return new FVector(ReadDouble(), ReadDouble(), ReadDouble());
+            }
+            else
+            {
+                return new FVector(ReadSingle(), ReadSingle(), ReadSingle());
+            }
         }
 
         /// <summary>
