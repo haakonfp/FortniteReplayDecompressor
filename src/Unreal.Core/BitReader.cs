@@ -531,84 +531,94 @@ namespace Unreal.Core
         {
             if (EngineNetworkVersion >= EngineNetworkVersionHistory.HISTORY_PACKED_VECTOR_LWC_SUPPORT)
             {
-                var ComponentBitCountAndExtraInfo = ReadUInt32Max(1 << 7);
-                var ComponentBitCount = ComponentBitCountAndExtraInfo & 63U;
-                var ExtraInfo = ComponentBitCountAndExtraInfo >> 6;
-
-                if (ComponentBitCount > 0)
-                {
-                    ulong X = ReadBitsToLong((int) ComponentBitCount);
-                    ulong Y = ReadBitsToLong((int) ComponentBitCount);
-                    ulong Z = ReadBitsToLong((int) ComponentBitCount);
-
-                    ulong signBit = 1UL << (int) (ComponentBitCount - 1);
-
-                    double fX = (long)(X ^ signBit) - (long)signBit;
-                    double fY = (long)(Y ^ signBit) - (long)signBit;
-                    double fZ = (long)(Z ^ signBit) - (long)signBit;
-                    
-                    if (ExtraInfo > 0)
-                    {
-                        fX /= scaleFactor;
-                        fY /= scaleFactor;
-                        fZ /= scaleFactor;
-                    }
-
-                    var f = new FVector(fX, fY, fZ);
-                    f.Bits = (int)ComponentBitCount;
-                    f.ScaleFactor = scaleFactor;
-                    return f;
-                }
-                else if (ExtraInfo == 0)
-                {
-                    var x = ReadSingle();
-                    var y = ReadSingle();
-                    var z = ReadSingle();
-                    var f = new FVector(x, y, z);
-                    f.Bits = 32;
-                    return f;
-                }
-                else
-                {
-                    var x = ReadDouble();
-                    var y = ReadDouble();
-                    var z = ReadDouble();
-                    var f = new FVector(x, y, z);
-                    f.Bits = 64;
-                    return f;
-                }
+                return ReadQuantizedVector(scaleFactor);
             }
-            else // LEGACY
+            else
             {
-                var bits = ReadSerializedInt(maxBits);
-
-                if (IsError)
-                {
-                    return new FVector(0, 0, 0);
-                }
-
-                var bias = 1 << ((int) bits + 1);
-                var max = 1 << ((int) bits + 2);
-
-                var dx = ReadSerializedInt(max);
-                var dy = ReadSerializedInt(max);
-                var dz = ReadSerializedInt(max);
-
-                if (IsError)
-                {
-                    return new FVector(0, 0, 0);
-                }
-
-                var x = (float) (dx - bias) / scaleFactor;
-                var y = (float) (dy - bias) / scaleFactor;
-                var z = (float) (dz - bias) / scaleFactor;
-
-                FVector vector = new FVector(x, y, z);
-                vector.ScaleFactor = scaleFactor;
-                vector.Bits = (int) bits;
-
-                return vector;
+                return ReadPackedVector_Legacy(scaleFactor, maxBits);
             }
+        }
+
+        private FVector ReadQuantizedVector(int scaleFactor)
+        {
+            var componentBitCountAndExtraInfo = ReadUInt32Max(1 << 7);
+            var componentBitCount = componentBitCountAndExtraInfo & 63U;
+            var extraInfo = componentBitCountAndExtraInfo >> 6;
+
+            if (componentBitCount > 0)
+            {
+                ulong X = ReadBitsToLong((int) componentBitCount);
+                ulong Y = ReadBitsToLong((int) componentBitCount);
+                ulong Z = ReadBitsToLong((int) componentBitCount);
+
+                ulong signBit = 1UL << (int) (componentBitCount - 1);
+
+                double fX = (long)(X ^ signBit) - (long)signBit;
+                double fY = (long)(Y ^ signBit) - (long)signBit;
+                double fZ = (long)(Z ^ signBit) - (long)signBit;
+                    
+                if (extraInfo > 0)
+                {
+                    fX /= scaleFactor;
+                    fY /= scaleFactor;
+                    fZ /= scaleFactor;
+                }
+
+                var f = new FVector(fX, fY, fZ);
+                f.Bits = (int)componentBitCount;
+                f.ScaleFactor = scaleFactor;
+                return f;
+            }
+            else if (extraInfo == 0)
+            {
+                var x = ReadSingle();
+                var y = ReadSingle();
+                var z = ReadSingle();
+                var f = new FVector(x, y, z);
+                f.Bits = 32;
+                return f;
+            }
+            else
+            {
+                var x = ReadDouble();
+                var y = ReadDouble();
+                var z = ReadDouble();
+                var f = new FVector(x, y, z);
+                f.Bits = 64;
+                return f;
+            }
+        }
+
+        private FVector ReadPackedVector_Legacy(int scaleFactor, int maxBits)
+        {
+            var bits = ReadSerializedInt(maxBits);
+
+            if (IsError)
+            {
+                return new FVector(0, 0, 0);
+            }
+
+            var bias = 1 << ((int) bits + 1);
+            var max = 1 << ((int) bits + 2);
+
+            var dx = ReadSerializedInt(max);
+            var dy = ReadSerializedInt(max);
+            var dz = ReadSerializedInt(max);
+
+            if (IsError)
+            {
+                return new FVector(0, 0, 0);
+            }
+
+            var x = (float) (dx - bias) / scaleFactor;
+            var y = (float) (dy - bias) / scaleFactor;
+            var z = (float) (dz - bias) / scaleFactor;
+
+            FVector vector = new FVector(x, y, z);
+            vector.ScaleFactor = scaleFactor;
+            vector.Bits = (int) bits;
+
+            return vector;
         }
 
         /// <summary>
