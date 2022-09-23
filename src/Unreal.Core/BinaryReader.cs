@@ -299,6 +299,18 @@ namespace Unreal.Core
         {
             return Reader.ReadSingle();
         }
+        
+        /// <summary>
+        /// Reads a 8-byte floating point value from the current stream and advances the current position of the stream by four bytes.
+        /// </summary>
+        /// <returns>A 8-byte floating point value read from the current stream.</returns>
+        /// <exception cref="System.IO.EndOfStreamException">Thrown when the end of the stream is reached.</exception>
+        /// <exception cref="System.ObjectDisposedException">Thrown when the stream is closed.</exception>
+        /// <exception cref="System.IO.IOException">Thrown when an I/O error occurs.</exception>
+        public override double ReadDouble()
+        {
+            return Reader.ReadDouble();
+        }
 
         /// <summary>
         /// Reads an array of tuples from the current stream. The array is prefixed with the number of items in it.

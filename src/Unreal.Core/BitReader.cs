@@ -130,6 +130,28 @@ namespace Unreal.Core
 
             return result;
         }
+        
+        /// <summary>
+        /// Retuns int and advances the <see cref="Position"/> by <paramref name="bits"/> bits.
+        /// </summary>
+        /// <param name="bits">The number of bits to read.</param>
+        /// <returns>int</returns>
+        public ulong ReadBitsToLong(int bitCount)
+        {
+            ulong result = new ulong();
+
+            bool[] bits = ReadBits(bitCount);
+
+            for (var i = 0; i < bits.Length; i++)
+            {
+                if (bits[i])
+                {
+                    result |= (1UL << i);
+                }
+            }
+
+            return result;
+        }
 
         /// <summary>
         /// Retuns bool[] and advances the <see cref="Position"/> by <paramref name="bits"/> bits.
@@ -507,6 +529,68 @@ namespace Unreal.Core
         /// <returns>Vector</returns>
         public override FVector ReadPackedVector(int scaleFactor, int maxBits)
         {
+            if (EngineNetworkVersion >= EngineNetworkVersionHistory.HISTORY_PACKED_VECTOR_LWC_SUPPORT)
+            {
+                return ReadQuantizedVector(scaleFactor);
+            }
+            else
+            {
+                return ReadPackedVector_Legacy(scaleFactor, maxBits);
+            }
+        }
+
+        private FVector ReadQuantizedVector(int scaleFactor)
+        {
+            var componentBitCountAndExtraInfo = ReadUInt32Max(1 << 7);
+            var componentBitCount = componentBitCountAndExtraInfo & 63U;
+            var extraInfo = componentBitCountAndExtraInfo >> 6;
+
+            if (componentBitCount > 0)
+            {
+                ulong X = ReadBitsToLong((int) componentBitCount);
+                ulong Y = ReadBitsToLong((int) componentBitCount);
+                ulong Z = ReadBitsToLong((int) componentBitCount);
+
+                ulong signBit = 1UL << (int) (componentBitCount - 1);
+
+                double fX = (long)(X ^ signBit) - (long)signBit;
+                double fY = (long)(Y ^ signBit) - (long)signBit;
+                double fZ = (long)(Z ^ signBit) - (long)signBit;
+                    
+                if (extraInfo > 0)
+                {
+                    fX /= scaleFactor;
+                    fY /= scaleFactor;
+                    fZ /= scaleFactor;
+                }
+
+                var f = new FVector(fX, fY, fZ);
+                f.Bits = (int)componentBitCount;
+                f.ScaleFactor = scaleFactor;
+                return f;
+            }
+            else if (extraInfo == 0)
+            {
+                var x = ReadSingle();
+                var y = ReadSingle();
+                var z = ReadSingle();
+                var f = new FVector(x, y, z);
+                f.Bits = 32;
+                return f;
+            }
+            else
+            {
+                var x = ReadDouble();
+                var y = ReadDouble();
+                var z = ReadDouble();
+                var f = new FVector(x, y, z);
+                f.Bits = 64;
+                return f;
+            }
+        }
+
+        private FVector ReadPackedVector_Legacy(int scaleFactor, int maxBits)
+        {
             var bits = ReadSerializedInt(maxBits);
 
             if (IsError)
@@ -514,8 +598,8 @@ namespace Unreal.Core
                 return new FVector(0, 0, 0);
             }
 
-            var bias = 1 << ((int)bits + 1);
-            var max = 1 << ((int)bits + 2);
+            var bias = 1 << ((int) bits + 1);
+            var max = 1 << ((int) bits + 2);
 
             var dx = ReadSerializedInt(max);
             var dy = ReadSerializedInt(max);
@@ -526,13 +610,13 @@ namespace Unreal.Core
                 return new FVector(0, 0, 0);
             }
 
-            var x = (float)(dx - bias) / scaleFactor;
-            var y = (float)(dy - bias) / scaleFactor;
-            var z = (float)(dz - bias) / scaleFactor;
+            var x = (float) (dx - bias) / scaleFactor;
+            var y = (float) (dy - bias) / scaleFactor;
+            var z = (float) (dz - bias) / scaleFactor;
 
             FVector vector = new FVector(x, y, z);
             vector.ScaleFactor = scaleFactor;
-            vector.Bits = (int)bits;
+            vector.Bits = (int) bits;
 
             return vector;
         }
@@ -623,6 +707,22 @@ namespace Unreal.Core
             return BitConverter.ToSingle(arr, 0);
 #else
             return BitConverter.ToSingle(arr);
+#endif
+        }
+        
+        public override double ReadDouble()
+        {
+            byte[] arr = ReadBytes(8);
+
+            if (IsError)
+            {
+                return 0;
+            }
+
+#if NETSTANDARD2_0
+            return BitConverter.ToDouble(arr, 0);
+#else
+            return BitConverter.ToDouble(arr);
 #endif
         }
 

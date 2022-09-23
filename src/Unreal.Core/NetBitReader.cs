@@ -86,11 +86,28 @@ namespace Unreal.Core
             VectorQuantization velocityQuantizationLevel = VectorQuantization.RoundWholeNumber)
         {
             var repMovement = new FRepMovement();
-            var flags = ReadBits(2);
+            bool[] flags = null;
 
+            var bRepServerFrame = false;
+            var bRepServerHandle = false;
+
+            // https://github.com/EpicGames/UnrealEngine/blob/41caf70e76701a52b935fc1495c7992e41486f86/Engine/Source/Runtime/Engine/Private/Engine/ReplicatedState.cpp#L63
+            if (EngineNetworkVersion >= EngineNetworkVersionHistory.HISTORY_REPMOVE_SERVERFRAME_AND_HANDLE
+                && EngineNetworkVersion != EngineNetworkVersionHistory.HISTORY_21_AND_VIEWPITCH_ONLY_DO_NOT_USE)
+            {
+                flags = ReadBits(4);
+                
+                bRepServerFrame = flags[2];
+                bRepServerHandle = flags[3];
+            }
+            else
+            {
+                flags = ReadBits(2);
+            }
+            
             repMovement.bSimulatedPhysicSleep = flags[0];
             repMovement.bRepPhysics = flags[1];
-
+            
             repMovement.Location = SerializeQuantizedVector(locationQuantizationLevel);
 
             switch(rotationQuantizationLevel)
@@ -110,6 +127,16 @@ namespace Unreal.Core
                 repMovement.AngularVelocity = SerializeQuantizedVector(velocityQuantizationLevel);
             }
 
+            if (bRepServerFrame)
+            {
+                repMovement.ServerFrame = ReadIntPacked();
+            }
+
+            if (bRepServerHandle)
+            {
+                repMovement.ServerPhysicsHandle = ReadIntPacked();
+            }
+
             return repMovement;
         }
 
@@ -125,7 +152,14 @@ namespace Unreal.Core
 
         public FVector SerializePropertyVector()
         {
-            return new FVector(ReadSingle(), ReadSingle(), ReadSingle());
+            if (EngineNetworkVersion >= EngineNetworkVersionHistory.HISTORY_PACKED_VECTOR_LWC_SUPPORT)
+            {
+                return new FVector(ReadDouble(), ReadDouble(), ReadDouble());
+            }
+            else
+            {
+                return new FVector(ReadSingle(), ReadSingle(), ReadSingle());
+            }
         }
 
         /// <summary>
