@@ -144,7 +144,7 @@ namespace Unreal.Core
 
             var s = builder.ToString();
 
-             var n = String.Join("\n", GuidCache.NetGuidToPathName.Select(x => $"{x.Key} - {x.Value}"));
+            var n = String.Join("\n", GuidCache.NetGuidToPathName.Select(x => $"{x.Key} - {x.Value}"));
 
 #endif
 
@@ -657,7 +657,7 @@ namespace Unreal.Core
                     TimeSeconds = _currentPacket.TimeSeconds,
                     Data = archive.ReadBytes(externalDataNumBytes)
                 };
-                
+
                 //Possible for multiple for a net guid?
                 GuidCache.ExternalData[netGuid] = data;
 
@@ -1486,7 +1486,7 @@ namespace Unreal.Core
                         continue;
                     }
 
-                    if (!ReceivedReplicatorBunch(bunch, reader, repObject, bHasRepLayout))
+                    if (!ReceivedReplicatorBunch(bunch, reader, repObject, bHasRepLayout, channel))
                     {
                         continue;
                     }
@@ -1508,11 +1508,21 @@ namespace Unreal.Core
         /// see https://github.com/EpicGames/UnrealEngine/blob/bf95c2cbc703123e08ab54e3ceccdd47e48d224a/Engine/Source/Runtime/Engine/Private/DataReplication.cpp#L896
         /// </summary>
         /// <param name="archive"></param>
-        protected virtual bool ReceivedReplicatorBunch(DataBunch bunch, NetBitReader archive, uint repObject, bool bHasRepLayout)
+        protected virtual bool ReceivedReplicatorBunch(DataBunch bunch, NetBitReader archive, uint repObject, bool bHasRepLayout, UChannel channel)
         {
             // outer is used to get path name
             // coreredirects.cpp ...
-            NetFieldExportGroup netFieldExportGroup = GuidCache.GetNetFieldExportGroup(repObject);
+            NetFieldExportGroup netFieldExportGroup;
+            string staticActorId = null;
+
+            if (channel.Actor.ActorNetGUID.IsDynamic())
+            {
+                netFieldExportGroup = GuidCache.GetNetFieldExportGroup(repObject);
+            }
+            else
+            {
+                netFieldExportGroup = GuidCache.GetStaticNetFieldExportGroup(repObject, out staticActorId);
+            }
 
             //Mainly props. If needed, add them in
             if (netFieldExportGroup == null)
@@ -1528,7 +1538,7 @@ namespace Unreal.Core
                 // if ENABLE_PROPERTY_CHECKSUMS
                 //var doChecksum = archive.ReadBit();
 
-                if (!ReceiveProperties(archive, netFieldExportGroup, bunch.ChIndex, out INetFieldExportGroup export))
+                if (!ReceiveProperties(archive, netFieldExportGroup, bunch.ChIndex, staticActorId, out INetFieldExportGroup export))
                 {
                     //Either failed to read properties or ignoring the channel
                     return false;
@@ -1539,7 +1549,7 @@ namespace Unreal.Core
             {
                 return true;
             }
-   
+
             NetFieldExportGroup classNetCache = GuidCache.GetNetFieldExportGroupForClassNetCache(netFieldExportGroup.PathName, bunch.Archive.EngineNetworkVersion >= EngineNetworkVersionHistory.HISTORY_CLASSNETCACHE_FULLNAME);
 
             if (classNetCache == null)
@@ -1613,7 +1623,7 @@ namespace Unreal.Core
                                 return false;
                             }
 
-                            if (!ReceivedRPC(reader, exportGroup, bunch.ChIndex))
+                            if (!ReceivedRPC(reader, exportGroup, bunch.ChIndex, staticActorId))
                             {
                                 return false;
                             }
@@ -1622,14 +1632,14 @@ namespace Unreal.Core
                         {
                             if (customSerialization)
                             {
-                                if (!ReceiveCustomProperty(reader, classNetCache, fieldCache, bunch.ChIndex))
+                                if (!ReceiveCustomProperty(reader, classNetCache, fieldCache, bunch.ChIndex, staticActorId))
                                 {
                                     _logger?.LogError($"Failed to parse custom property {classNetCache.PathName} {fieldCache.Name}");
                                 }
                             }
                             else if (exportGroup != null)
                             {
-                                if (!ReceiveCustomDeltaProperty(reader, classNetCache, fieldCache.Handle, bunch.ChIndex))
+                                if (!ReceiveCustomDeltaProperty(reader, classNetCache, fieldCache.Handle, bunch.ChIndex, staticActorId))
                                 {
                                     _logger?.LogError($"Failed to find custom delta property {fieldCache.Name}. BunchIndex: {_bunchIndex}");
 
@@ -1661,9 +1671,9 @@ namespace Unreal.Core
         /// </summary>
         /// <param name="reader"></param>
         /// <returns></returns>
-        protected virtual bool ReceivedRPC(NetBitReader reader, NetFieldExportGroup netFieldExportGroup, uint channelIndex)
+        protected virtual bool ReceivedRPC(NetBitReader reader, NetFieldExportGroup netFieldExportGroup, uint channelIndex, string staticActorId)
         {
-            ReceiveProperties(reader, netFieldExportGroup, channelIndex, out INetFieldExportGroup export);
+            ReceiveProperties(reader, netFieldExportGroup, channelIndex, staticActorId, out INetFieldExportGroup export);
 
             if (reader.IsError)
             {
@@ -1685,7 +1695,7 @@ namespace Unreal.Core
         /// </summary>
         /// <param name="reader"></param>
         /// <returns></returns>
-        protected virtual bool ReceiveCustomDeltaProperty(NetBitReader reader, NetFieldExportGroup netFieldExportGroup, uint handle, uint channelIndex)
+        protected virtual bool ReceiveCustomDeltaProperty(NetBitReader reader, NetFieldExportGroup netFieldExportGroup, uint handle, uint channelIndex, string staticActorId)
         {
             bool bSupportsFastArrayDeltaStructSerialization = false;
 
@@ -1698,7 +1708,7 @@ namespace Unreal.Core
             //Need to figure out which properties require this
             //var staticArrayIndex = reader.ReadIntPacked();
 
-            if (NetDeltaSerialize(reader, bSupportsFastArrayDeltaStructSerialization, netFieldExportGroup, handle, channelIndex))
+            if (NetDeltaSerialize(reader, bSupportsFastArrayDeltaStructSerialization, netFieldExportGroup, handle, channelIndex, staticActorId))
             {
                 // Successfully received it.
                 return true;
@@ -1712,7 +1722,7 @@ namespace Unreal.Core
         /// </summary>
         /// <param name="reader"></param>
         /// <returns></returns>
-        protected virtual bool NetDeltaSerialize(NetBitReader reader, bool bSupportsFastArrayDeltaStructSerialization, NetFieldExportGroup netFieldExportGroup, uint handle, uint channelIndex)
+        protected virtual bool NetDeltaSerialize(NetBitReader reader, bool bSupportsFastArrayDeltaStructSerialization, NetFieldExportGroup netFieldExportGroup, uint handle, uint channelIndex, string staticActorId)
         {
             if (!bSupportsFastArrayDeltaStructSerialization)
             {
@@ -1754,6 +1764,7 @@ namespace Unreal.Core
                     _deltaUpdate.PropertyExport = propertyExportGroup;
                     _deltaUpdate.Handle = handle;
                     _deltaUpdate.Header = header;
+                    _deltaUpdate.StaticActorId = staticActorId;
 
                     OnNetDeltaRead(_deltaUpdate);
                 }
@@ -1763,7 +1774,7 @@ namespace Unreal.Core
             {
                 int elementIndex = reader.ReadInt32();
 
-                if (ReceiveProperties(reader, propertyExportGroup, channelIndex, out INetFieldExportGroup export, !readChecksumBit, true))
+                if (ReceiveProperties(reader, propertyExportGroup, channelIndex, staticActorId, out INetFieldExportGroup export, !readChecksumBit, true))
                 {
                     _deltaUpdate.Deleted = false;
                     _deltaUpdate.ChannelIndex = channelIndex;
@@ -1773,6 +1784,7 @@ namespace Unreal.Core
                     _deltaUpdate.PropertyExport = propertyExportGroup;
                     _deltaUpdate.Handle = handle;
                     _deltaUpdate.Header = header;
+                    _deltaUpdate.StaticActorId = staticActorId;
 
                     OnNetDeltaRead(_deltaUpdate);
                 }
@@ -1805,7 +1817,7 @@ namespace Unreal.Core
             return header;
         }
 
-        private bool ReceiveCustomProperty(NetBitReader reader, NetFieldExportGroup classNetCache, NetFieldExport fieldCache, uint channelIndex)
+        private bool ReceiveCustomProperty(NetBitReader reader, NetFieldExportGroup classNetCache, NetFieldExport fieldCache, uint channelIndex, string staticActorId)
         {
             if (_netFieldParser.TryCreateRPCPropertyType(classNetCache.PathName, fieldCache.Name, out IProperty customProperty))
             {
@@ -1817,7 +1829,7 @@ namespace Unreal.Core
 
                     customProperty.Serialize(netreader);
 
-                    OnExportRead(channelIndex, customProperty as INetFieldExportGroup);
+                    OnExportRead(channelIndex, customProperty as INetFieldExportGroup, staticActorId);
 
                     return true;
                 }
@@ -1838,7 +1850,7 @@ namespace Unreal.Core
         ///  https://github.com/EpicGames/UnrealEngine/blob/bf95c2cbc703123e08ab54e3ceccdd47e48d224a/Engine/Source/Runtime/Engine/Private/RepLayout.cpp#L3022
         /// </summary>
         /// <param name="archive"></param>
-        protected virtual bool ReceiveProperties(NetBitReader archive, NetFieldExportGroup group, uint channelIndex, out INetFieldExportGroup outExport, bool readChecksumBit = true, bool isDeltaRead = false)
+        protected virtual bool ReceiveProperties(NetBitReader archive, NetFieldExportGroup group, uint channelIndex, string staticActorId, out INetFieldExportGroup outExport, bool readChecksumBit = true, bool isDeltaRead = false)
         {
             outExport = null;
 
@@ -1889,7 +1901,7 @@ namespace Unreal.Core
 
             outExport.ChannelActor = Channels[channelIndex].Actor;
 
-            if(externalData != null)
+            if (externalData != null)
             {
                 //Need to change later to a similar parsing like INetFieldExportGroup
                 if (externalData.Data.Length > 0 && group.NetFieldExports.Length > externalData.Data[0])
@@ -1999,7 +2011,7 @@ namespace Unreal.Core
             //Delta structures are handled differently
             if (hasData && !isDeltaRead)
             {
-                OnExportRead(channelIndex, exportGroup);
+                OnExportRead(channelIndex, exportGroup, staticActorId);
             }
 
             if (Channels[channelIndex].IgnoreChannel == null && ParseType != ParseType.Debug)
@@ -2491,7 +2503,7 @@ namespace Unreal.Core
 
             int totalBits = reader.GetBitsLeft();
 
-            for(int i = 0; i < totalBits - (bytes.Length * 8); i++)
+            for (int i = 0; i < totalBits - (bytes.Length * 8); i++)
             {
                 reader.Seek(i, SeekOrigin.Begin);
 
@@ -2499,9 +2511,9 @@ namespace Unreal.Core
 
                 bool found = true;
 
-                for(int z = 0; z < testBytes.Length; z++)
+                for (int z = 0; z < testBytes.Length; z++)
                 {
-                    if(testBytes[z] != bytes[z])
+                    if (testBytes[z] != bytes[z])
                     {
                         found = false;
 
@@ -2570,7 +2582,7 @@ namespace Unreal.Core
             return _netFieldParser.GetNetFieldExportTypes();
         }
 
-        protected abstract void OnExportRead(uint channel, INetFieldExportGroup exportGroup);
+        protected abstract void OnExportRead(uint channel, INetFieldExportGroup exportGroup, string staticActorId);
         protected abstract void OnNetDeltaRead(NetDeltaUpdate deltaUpdate);
         protected abstract bool ContinueParsingChannel(INetFieldExportGroup exportGroup);
         protected abstract void OnChannelActorRead(uint channel, Actor actor);

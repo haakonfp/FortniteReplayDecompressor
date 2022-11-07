@@ -82,7 +82,7 @@ namespace FortniteReplayReader
             Replay.GameInformation.HandleDeltaNetRead(deltaUpdate);
         }
 
-        protected override void OnExportRead(uint channel, INetFieldExportGroup exportGroup)
+        protected override void OnExportRead(uint channel, INetFieldExportGroup exportGroup, string staticActorId)
         {
             ++TotalPropertiesRead;
 
@@ -114,7 +114,7 @@ namespace FortniteReplayReader
                     Replay.GameInformation.UpdatePrivateTeamInfo(channel, privateTeamInfo);
                     break;
                 case SearchableContainer searchableContainer:
-                    Replay.GameInformation.UpdateSearchableContainer(channel, searchableContainer);
+                    Replay.GameInformation.UpdateSearchableContainer(staticActorId, searchableContainer);
                     break;
                 case GameplayCueExecuted cueExecuted:
                     //Fall damage should be in here

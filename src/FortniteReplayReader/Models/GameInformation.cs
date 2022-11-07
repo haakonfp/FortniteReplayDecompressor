@@ -54,7 +54,7 @@ namespace FortniteReplayReader.Models
         private Dictionary<uint, List<QueuedPlayerPawn>> _queuedPlayerPawns = new Dictionary<uint, List<QueuedPlayerPawn>>();
         private Dictionary<uint, Weapon> _weapons = new Dictionary<uint, Weapon>(); //Channel to weapon
         private Dictionary<uint, Weapon> _unknownWeapons = new Dictionary<uint, Weapon>(); //Channel to weapon
-        private Dictionary<uint, object> _containers = new Dictionary<uint, object>(); //Channel to searchable containers
+        private Dictionary<string, Container> _containers = new Dictionary<string, Container>(); //Channel to searchable containers
         private Dictionary<uint, PlayerStructure> _playerStructures = new Dictionary<uint, PlayerStructure>(); //Channel to player structures
         private Dictionary<string, uint> _healthSetStartingHandles = new Dictionary<string, uint>(); //Starting handle ids for a health set
         private Dictionary<uint, Vehicle> _vehicles = new Dictionary<uint, Vehicle>(); //Channel id to vehicle
@@ -114,9 +114,38 @@ namespace FortniteReplayReader.Models
             newLlama.SpawnedItems = supplyDropLlama.bHasSpawnedPickups ?? newLlama.SpawnedItems;
         }
 
-        internal void UpdateSearchableContainer(uint channelId, SearchableContainer searchableContainer)
+        internal void UpdateSearchableContainer(string staticActorId, SearchableContainer searchableContainer)
         {
+            Container newContainer = new Container();
 
+            if (!_containers.TryAdd(staticActorId, newContainer))
+            {
+                _containers.TryGetValue(staticActorId, out newContainer);
+            }
+
+            newContainer.bDestroyed = searchableContainer.bDestroyed ?? newContainer.bDestroyed;
+            newContainer.BuildTime = searchableContainer.BuildTime ?? newContainer.BuildTime;
+            newContainer.RepairTime = searchableContainer.RepairTime ?? newContainer.RepairTime;
+            newContainer.Health = searchableContainer.Health ?? newContainer.Health;
+            newContainer.MaxHealth = searchableContainer.MaxHealth ?? newContainer.MaxHealth;
+            newContainer.ReplicatedLootTier = searchableContainer.ReplicatedLootTier ?? newContainer.ReplicatedLootTier;
+            newContainer.SearchAnimationCount = searchableContainer.SearchAnimationCount ?? newContainer.SearchAnimationCount;
+            newContainer.bAlreadySearched = searchableContainer.bAlreadySearched ?? newContainer.bAlreadySearched;
+            newContainer.ResourceType = searchableContainer.ResourceType ?? newContainer.ResourceType;
+            newContainer.ForceMetadataRelevant = searchableContainer.ForceMetadataRelevant ?? newContainer.ForceMetadataRelevant;
+            newContainer.StaticMesh = searchableContainer.StaticMesh ?? newContainer.StaticMesh;
+            newContainer.WeaponData  = searchableContainer.WeaponData  ?? newContainer.WeaponData ;
+            newContainer.bDestroyOnPlayerBuildingPlacement = searchableContainer.bDestroyOnPlayerBuildingPlacement ?? newContainer.bDestroyOnPlayerBuildingPlacement;
+            newContainer.bInstantDeath = searchableContainer.bInstantDeath ?? newContainer.bInstantDeath;
+            newContainer.SearchedMesh = searchableContainer.SearchedMesh ?? newContainer.SearchedMesh;
+            newContainer.AltMeshIdx = searchableContainer.AltMeshIdx ?? newContainer.AltMeshIdx;
+            newContainer.ProxyGameplayCueDamagePhysicalMagnitude = searchableContainer.ProxyGameplayCueDamagePhysicalMagnitude ?? newContainer.ProxyGameplayCueDamagePhysicalMagnitude;
+            newContainer.EffectContext = searchableContainer.EffectContext ?? newContainer.EffectContext;
+            newContainer.ChosenRandomUpgrade = searchableContainer.ChosenRandomUpgrade ?? newContainer.ChosenRandomUpgrade;
+            newContainer.bMirrored = searchableContainer.bMirrored ?? newContainer.bMirrored;
+            newContainer.ReplicatedDrawScale3D = searchableContainer.ReplicatedDrawScale3D ?? newContainer.ReplicatedDrawScale3D;
+            newContainer.bIsInitiallyBuilding = searchableContainer.bIsInitiallyBuilding ?? newContainer.bIsInitiallyBuilding;
+            newContainer.bForceReplayRollback = searchableContainer.bForceReplayRollback ?? newContainer.bForceReplayRollback;
         }
 
         internal void UpdatePlaylistInfo(uint channelId, CurrentPlaylistInfo playlistInfo)
