@@ -59,7 +59,7 @@ namespace Unreal.Core
 
         private static int[] GetPool()
         {
-            if(_positionQueues.TryDequeue(out int[] result))
+            if (_positionQueues.TryDequeue(out int[] result))
             {
                 return result;
             }
@@ -125,6 +125,27 @@ namespace Unreal.Core
             }
 
             var result = 0;
+
+            for (var i = 0; i < bitCount; i++)
+            {
+                result |= (byte)(GetAsByte(_position + i) << i);
+            }
+
+            _position += bitCount;
+
+            return result;
+        }
+
+        public ulong ReadBitsToLong(int bitCount)
+        {
+            if (!CanRead(bitCount))
+            {
+                IsError = true;
+
+                return 0;
+            }
+
+            ulong result = 0;
 
             for (var i = 0; i < bitCount; i++)
             {
@@ -345,7 +366,7 @@ namespace Unreal.Core
 
                 value |= GetAsByte(_position++) << count++;
             }
-            
+
             return (uint)value;
         }
 
@@ -422,7 +443,81 @@ namespace Unreal.Core
         /// see https://github.com/EpicGames/UnrealEngine/blob/70bc980c6361d9a7d23f6d23ffe322a2d6ef16fb/Engine/Source/Runtime/Engine/Classes/Engine/NetSerialization.h#L1210
         /// </summary>
         /// <returns>Vector</returns>
+        ///         
         public override FVector ReadPackedVector(int scaleFactor, int maxBits)
+        {
+            if (EngineNetworkVersion >= EngineNetworkVersionHistory.HISTORY_PACKED_VECTOR_LWC_SUPPORT && EngineNetworkVersion != EngineNetworkVersionHistory.HISTORY_21_AND_VIEWPITCH_ONLY_DO_NOT_USE)
+            {
+                return ReadQuantizedVector(scaleFactor);
+            }
+
+            return ReadPackedVectorLegacy(scaleFactor, maxBits);
+        }
+
+        /// <summary>
+        /// see https://github.com/EpicGames/UnrealEngine/commit/db095ed4a590f2ae0f42a2fbf9e22678fbb1fb9f#diff-2641717376a3189c7cc27e9e28c26b72ce57d5d3efcf4a26b6beb0dd92eaaa0f
+        /// </summary>
+        private FVector ReadQuantizedVector(int scaleFactor)
+        {
+            var componentBitCountAndExtraInfo = ReadSerializedInt(1 << 7);
+            var componentBitCount = (int)(componentBitCountAndExtraInfo & 63U);
+            var extraInfo = componentBitCountAndExtraInfo >> 6;
+
+            if (componentBitCount > 0U)
+            {
+                var X = ReadBitsToLong((int)componentBitCount);
+                var Y = ReadBitsToLong((int)componentBitCount);
+                var Z = ReadBitsToLong((int)componentBitCount);
+
+                ulong signBit = 1UL << (int)(componentBitCount - 1);
+
+                double fX = (long)(X ^ signBit) - (long)signBit;
+                double fY = (long)(Y ^ signBit) - (long)signBit;
+                double fZ = (long)(Z ^ signBit) - (long)signBit;
+
+                if (extraInfo > 0)
+                {
+                    fX /= scaleFactor;
+                    fY /= scaleFactor;
+                    fZ /= scaleFactor;
+                }
+
+                return new FVector(fX, fY, fZ)
+                {
+                    Bits = componentBitCount,
+                    ScaleFactor = scaleFactor,
+                };
+            }
+            else if (extraInfo == 0)
+            {
+                double X = ReadSingle();
+                double Y = ReadSingle();
+                double Z = ReadSingle();
+
+                return new FVector(X, Y, Z)
+                {
+                    Bits = 32,
+                    ScaleFactor = scaleFactor,
+                };
+            }
+            else
+            {
+                double X = ReadDouble();
+                double Y = ReadDouble();
+                double Z = ReadDouble();
+
+                return new FVector(X, Y, Z)
+                {
+                    Bits = 64,
+                    ScaleFactor = scaleFactor,
+                };
+            }
+        }
+
+
+
+
+        public FVector ReadPackedVectorLegacy(int scaleFactor, int maxBits)
         {
             var bits = ReadSerializedInt(maxBits);
 
@@ -527,6 +622,15 @@ namespace Unreal.Core
             ReadBytes(value);
 
             return BinaryPrimitives.ReadSingleLittleEndian(value);
+        }
+
+        public override double ReadDouble()
+        {
+            Span<byte> value = stackalloc byte[8];
+
+            ReadBytes(value);
+
+            return BinaryPrimitives.ReadDoubleLittleEndian(value);
         }
 
         public override (T, U)[] ReadTupleArray<T, U>(Func<T> func1, Func<U> func2)

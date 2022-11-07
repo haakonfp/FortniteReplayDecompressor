@@ -402,15 +402,33 @@ namespace FortniteReplayReader
                     //EventLocation
                     if (version >= 6)
                     {
-                        elim.EliminatedInfo.Rotation = new FQuat(archive.ReadSingle(), archive.ReadSingle(), archive.ReadSingle(), archive.ReadSingle());
-                        elim.EliminatedInfo.Location = new FVector(archive.ReadSingle(), archive.ReadSingle(), archive.ReadSingle());
-                        elim.EliminatedInfo.Scale = new FVector(archive.ReadSingle(), archive.ReadSingle(), archive.ReadSingle());
+                        if (archive.EngineNetworkVersion >= EngineNetworkVersionHistory.HISTORY_PACKED_VECTOR_LWC_SUPPORT)
+                        {
+                            elim.EliminatedInfo.Rotation = new FQuat(archive.ReadDouble(), archive.ReadDouble(), archive.ReadDouble(), archive.ReadDouble());
+                            elim.EliminatedInfo.Location = new FVector(archive.ReadDouble(), archive.ReadDouble(), archive.ReadDouble());
+                            elim.EliminatedInfo.Scale = new FVector(archive.ReadDouble(), archive.ReadDouble(), archive.ReadDouble());
+                        }
+                        else
+                        {
+                            elim.EliminatedInfo.Rotation = new FQuat(archive.ReadSingle(), archive.ReadSingle(), archive.ReadSingle(), archive.ReadSingle());
+                            elim.EliminatedInfo.Location = new FVector(archive.ReadSingle(), archive.ReadSingle(), archive.ReadSingle());
+                            elim.EliminatedInfo.Scale = new FVector(archive.ReadSingle(), archive.ReadSingle(), archive.ReadSingle());
+                        }
                     }
 
                     //InstigatorLocation
-                    elim.EliminatorInfo.Rotation = new FQuat(archive.ReadSingle(), archive.ReadSingle(), archive.ReadSingle(), archive.ReadSingle());
-                    elim.EliminatorInfo.Location = new FVector(archive.ReadSingle(), archive.ReadSingle(), archive.ReadSingle());
-                    elim.EliminatorInfo.Scale = new FVector(archive.ReadSingle(), archive.ReadSingle(), archive.ReadSingle());
+                    if (archive.EngineNetworkVersion >= EngineNetworkVersionHistory.HISTORY_PACKED_VECTOR_LWC_SUPPORT)
+                    {
+                        elim.EliminatorInfo.Rotation = new FQuat(archive.ReadDouble(), archive.ReadDouble(), archive.ReadDouble(), archive.ReadDouble());
+                        elim.EliminatorInfo.Location = new FVector(archive.ReadDouble(), archive.ReadDouble(), archive.ReadDouble());
+                        elim.EliminatorInfo.Scale = new FVector(archive.ReadDouble(), archive.ReadDouble(), archive.ReadDouble());
+                    }
+                    else
+                    {
+                        elim.EliminatorInfo.Rotation = new FQuat(archive.ReadSingle(), archive.ReadSingle(), archive.ReadSingle(), archive.ReadSingle());
+                        elim.EliminatorInfo.Location = new FVector(archive.ReadSingle(), archive.ReadSingle(), archive.ReadSingle());
+                        elim.EliminatorInfo.Scale = new FVector(archive.ReadSingle(), archive.ReadSingle(), archive.ReadSingle());
+                    }
 
 
                     ParsePlayer(archive, elim.EliminatedInfo, version);
@@ -468,7 +486,7 @@ namespace FortniteReplayReader
                     info.Id = archive.ReadGUID(archive.ReadByte());
                     break;
                 default:
-                    _logger.LogWarning($"Unknown player type {info.PlayerType}");
+                    _logger?.LogWarning($"Unknown player type {info.PlayerType}");
                     break;
             }
         }

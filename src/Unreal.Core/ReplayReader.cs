@@ -487,6 +487,13 @@ namespace Unreal.Core
                 header.Changelist = archive.ReadUInt32();
             }
 
+            if (header.NetworkVersion >= NetworkVersionHistory.HISTORY_RECORDING_METADATA)
+            {
+                header.UE4Version = archive.ReadUInt32();
+                header.UE5Version = archive.ReadUInt32();
+                header.PackageVersionLicenseeUE = archive.ReadUInt32();
+            }
+
             if (header.NetworkVersion <= NetworkVersionHistory.HISTORY_MULTIPLE_LEVELS)
             {
                 throw new NotImplementedException();
@@ -503,6 +510,18 @@ namespace Unreal.Core
             }
 
             header.GameSpecificData = archive.ReadArray(archive.ReadFString);
+
+            if (header.NetworkVersion >= NetworkVersionHistory.HISTORY_SAVE_PACKAGE_VERSION_UE)
+            {
+                var minRecordHz = archive.ReadSingle();
+                var maxRecordHz = archive.ReadSingle();
+                var frameLimitInMS = archive.ReadSingle();
+                var checkpointLimitInMS = archive.ReadSingle();
+
+                header.Platform = archive.ReadFString();
+                var buildConfig = archive.ReadByte();
+                header.BuildTargetType = archive.ReadByteAsEnum<BuildTargetType>();
+            }
 
             archive.EngineNetworkVersion = header.EngineNetworkVersion;
             archive.NetworkVersion = header.NetworkVersion;

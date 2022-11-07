@@ -111,6 +111,14 @@ namespace Unreal.Core
 
             repMovement.bSimulatedPhysicSleep = Bits[_position++];
             repMovement.bRepPhysics = Bits[_position++];
+            var bRepServerFrame = false;
+            var bRepServerHandle = false;
+
+            if (EngineNetworkVersion >= EngineNetworkVersionHistory.HISTORY_REPMOVE_SERVERFRAME_AND_HANDLE && EngineNetworkVersion != EngineNetworkVersionHistory.HISTORY_21_AND_VIEWPITCH_ONLY_DO_NOT_USE)
+            {
+                bRepServerFrame = ReadBit();
+                bRepServerHandle = ReadBit();
+            }
 
             repMovement.Location = SerializeQuantizedVector(locationQuantizationLevel);
 
@@ -131,6 +139,16 @@ namespace Unreal.Core
                 repMovement.AngularVelocity = SerializeQuantizedVector(velocityQuantizationLevel);
             }
 
+            if (bRepServerFrame)
+            {
+                repMovement.ServerFrame = ReadIntPacked();
+            }
+
+            if (bRepServerHandle)
+            {
+                repMovement.ServerPhysicsHandle = ReadIntPacked();
+            }
+
             return repMovement;
         }
 
@@ -146,7 +164,14 @@ namespace Unreal.Core
 
         public FVector SerializePropertyVector()
         {
-            return new FVector(ReadSingle(), ReadSingle(), ReadSingle());
+            if (EngineNetworkVersion >= EngineNetworkVersionHistory.HISTORY_PACKED_VECTOR_LWC_SUPPORT)
+            {
+                return new FVector(ReadDouble(), ReadDouble(), ReadDouble());
+            }
+            else
+            {
+                return new FVector(ReadSingle(), ReadSingle(), ReadSingle());
+            }
         }
 
         /// <summary>

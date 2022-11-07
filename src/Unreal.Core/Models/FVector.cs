@@ -12,25 +12,31 @@ namespace Unreal.Core.Models
         /// <param name="X"></param>
         /// <param name="Y"></param>
         /// <param name="Z"></param>
-        public FVector(float X, float Y, float Z)
+        public FVector(double X, double Y, double Z)
         {
             this.X = X;
             this.Y = Y;
             this.Z = Z;
+
+            //Fix later
+            ScaleFactor = 0;
+            Bits = 0;
         }
 
-        public float X { get; set; }
-        public float Y { get; set; }
-        public float Z { get; set; }
+        public double X { get; set; }
+        public double Y { get; set; }
+        public double Z { get; set; }
+        public int ScaleFactor { get; set; }
+        public int Bits { get; set; }
 
         public override string ToString()
         {
             return $"X: {X}, Y: {Y}, Z: {Z}";
         }
 
-        public float Size()
+        public double Size()
         {
-            return (float)Math.Sqrt(X * X + Y * Y + Z * Z);
+            return (double)Math.Sqrt(X * X + Y * Y + Z * Z);
         }
 
         public void Serialize(NetBitReader reader)
@@ -57,12 +63,12 @@ namespace Unreal.Core.Models
 
         public static FVector operator *(FVector v1, double val)
         {
-            return new FVector((float)(v1.X * val), (float)(v1.Y * val), (float)(v1.Z * val));
+            return new FVector((double)(v1.X * val), (double)(v1.Y * val), (double)(v1.Z * val));
         }
 
         public static FVector operator /(FVector v1, double val)
         {
-            return new FVector((float)(v1.X / val), (float)(v1.Y / val), (float)(v1.Z / val));
+            return new FVector((double)(v1.X / val), (double)(v1.Y / val), (double)(v1.Z / val));
         }
 
         public double DistanceTo(FVector vector)

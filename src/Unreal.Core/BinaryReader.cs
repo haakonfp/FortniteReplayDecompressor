@@ -377,6 +377,11 @@ namespace Unreal.Core
             return Reader.ReadSingle();
         }
 
+        public override double ReadDouble()
+        {
+            return Reader.ReadDouble();
+        }
+
         /// <summary>
         /// Reads an array of tuples from the current stream. The array is prefixed with the number of items in it.
         /// see https://github.com/EpicGames/UnrealEngine/blob/7d9919ac7bfd80b7483012eab342cb427d60e8c9/Engine/Source/Runtime/Core/Public/Containers/Array.h#L1069
