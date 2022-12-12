@@ -2067,11 +2067,35 @@ namespace Unreal.Core
                 return netGuid.Value;
             }
 
-            // Serialize the class in case we have to spawn it.
-            var classNetGUID = InternalLoadObject(bunch.Archive, false);
+            var bDeleteSubObject = false;
+            var bSerializeClass = true;
 
-            //Object deleted
-            if (!classNetGUID.IsValid())
+            if (bunch.Archive.EngineNetworkVersion >= EngineNetworkVersionHistory.HISTORY_SUBOBJECT_DESTROY_FLAG)
+            {
+                var bIsDestroyMessage = bunch.Archive.ReadBit();
+                if (bIsDestroyMessage)
+                {
+                    bDeleteSubObject = true;
+                    bSerializeClass = false;
+
+                    var destroyFlags = bunch.Archive.ReadByte();
+                }
+            }
+            //else
+            //{
+            //    bSerializeClass = true;
+            //}
+
+            var classNetGUID = new NetworkGUID();
+            if (bSerializeClass)
+            {
+                // Serialize the class in case we have to spawn it.
+                classNetGUID = InternalLoadObject(bunch.Archive, false);
+
+                bDeleteSubObject = !classNetGUID.IsValid();
+            }
+
+            if (bDeleteSubObject)
             {
                 bObjectDeleted = true;
 
