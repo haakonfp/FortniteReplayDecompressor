@@ -1,13 +1,9 @@
-﻿using System;
-using System.Collections.Generic;
-using System.Text;
-using FortniteReplayReader.Models.NetFieldExports.Sets;
+﻿using FortniteReplayReader.Models.NetFieldExports.Sets;
 
-namespace FortniteReplayReader.Models
+namespace FortniteReplayReader.Models;
+
+public class HealthUpdate
 {
-    public class HealthUpdate
-    {
-        public HealthSet Health { get; internal set; }
-        public float DeltaGameTimeSeconds { get; internal set; }
-    }
+	public HealthSet Health { get; internal set; }
+	public float DeltaGameTimeSeconds { get; internal set; }
 }

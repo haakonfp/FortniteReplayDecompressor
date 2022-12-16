@@ -1,20 +1,13 @@
-﻿using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Text;
-using System.Threading.Tasks;
+﻿namespace FortniteReplayReader.Models.NetFieldExports.Enums;
 
-namespace FortniteReplayReader.Models.NetFieldExports.Enums
+public enum EBuildingAnim
 {
-	public enum EBuildingAnim
-	{
-		None,
-		Building,
-		Breaking,
-		Destruction,
-		Placement,
-		DynamicLOD,
-		DynamicShrink,
-		MAX,
-	};
-}
+	None,
+	Building,
+	Breaking,
+	Destruction,
+	Placement,
+	DynamicLOD,
+	DynamicShrink,
+	MAX,
+};

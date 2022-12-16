@@ -1,15 +1,8 @@
-﻿using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Text;
-using System.Threading.Tasks;
+﻿namespace FortniteReplayReader.Models.NetFieldExports.Enums;
 
-namespace FortniteReplayReader.Models.NetFieldExports.Enums
+public enum EMinigameWinCondition
 {
-	public enum EMinigameWinCondition
-	{
-		MostRoundWins,
-		MostScoreWins,
-		EMinigameWinCondition_MAX,
-	};
-}
+	MostRoundWins,
+	MostScoreWins,
+	EMinigameWinCondition_MAX,
+};

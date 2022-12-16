@@ -1,7 +1,6 @@
-namespace FortniteReplayReader.Models
+namespace FortniteReplayReader.Models;
+
+public class EncryptionKey : BaseEvent
 {
-    public class EncryptionKey : BaseEvent
-    {
-        public string Key { get; internal set; }
-    }
+	public string Key { get; internal set; }
 }

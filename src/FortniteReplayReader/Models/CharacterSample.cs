@@ -1,7 +1,6 @@
-namespace FortniteReplayReader.Models
+namespace FortniteReplayReader.Models;
+
+public class CharacterSample : BaseEvent
 {
-    public class CharacterSample : BaseEvent
-    {
-        public string Unknown { get; internal set; }
-    }
+	public string Unknown { get; internal set; }
 }

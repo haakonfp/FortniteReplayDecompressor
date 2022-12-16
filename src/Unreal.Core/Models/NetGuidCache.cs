@@ -1,272 +1,186 @@
 ﻿using System;
 using System.Collections.Generic;
-using System.Linq;
-using System.Text;
-using System.Text.RegularExpressions;
 using Unreal.Core.Extensions;
 
-namespace Unreal.Core.Models
+namespace Unreal.Core.Models;
+
+public class NetGuidCache
 {
-    public class NetGuidCache
-    {
-        public Dictionary<string, NetFieldExportGroup> NetFieldExportGroupMap { get; private set; } = new Dictionary<string, NetFieldExportGroup>();
-        public Dictionary<uint, NetFieldExportGroup> NetFieldExportGroupIndexToGroup { get; private set; } = new Dictionary<uint, NetFieldExportGroup>();
-        //public Dictionary<uint, NetGuidCacheObject> ImportedNetGuids { get; private set; } = new Dictionary<uint, NetGuidCacheObject>();
-        public Dictionary<uint, string> NetGuidToPathName { get; private set; } = new Dictionary<uint, string>();
+	public Dictionary<string, NetFieldExportGroup> NetFieldExportGroupMap { get; private set; } = new Dictionary<string, NetFieldExportGroup>();
+	public Dictionary<uint, NetFieldExportGroup> NetFieldExportGroupIndexToGroup { get; private set; } = new Dictionary<uint, NetFieldExportGroup>();
+	//public Dictionary<uint, NetGuidCacheObject> ImportedNetGuids { get; private set; } = new Dictionary<uint, NetGuidCacheObject>();
+	public Dictionary<uint, string> NetGuidToPathName { get; private set; } = new Dictionary<uint, string>();
+	public Dictionary<uint, ExternalData> ExternalData { get; private set; } = new Dictionary<uint, ExternalData>();
 
-        public NetFieldExportGroup NetworkGameplayTagNodeIndex { get; private set; }
 
-        private Dictionary<uint, NetFieldExportGroup> _archTypeToExportGroup = new Dictionary<uint, NetFieldExportGroup>();
-        public Dictionary<uint, NetFieldExportGroup> NetFieldExportGroupMapPathFixed { get; private set; } = new Dictionary<uint, NetFieldExportGroup>();
-        private Dictionary<uint, string> _cleanedPaths = new Dictionary<uint, string>();
-        private Dictionary<string, string> _cleanedClassNetCache = new Dictionary<string, string>();
-        private Dictionary<string, string> _partialPathNames = new Dictionary<string, string>();
-        private HashSet<string> _failedPaths = new HashSet<string>(); //Path names that didn't find an export group
+	public NetFieldExportGroup NetworkGameplayTagNodeIndex { get; private set; }
 
-        private Dictionary<string, NetFieldExportGroup> _pathToExportGroup = new Dictionary<string, NetFieldExportGroup>();
+	private Dictionary<uint, NetFieldExportGroup> _archTypeToExportGroup = new();
+	public Dictionary<uint, NetFieldExportGroup> NetFieldExportGroupMapPathFixed { get; private set; } = new Dictionary<uint, NetFieldExportGroup>();
+	private Dictionary<uint, string> _cleanedPaths = new();
+	private Dictionary<string, string> _cleanedClassNetCache = new();
+	private Dictionary<string, string> _partialPathNames = new();
+	private HashSet<string> _failedPaths = new(); //Path names that didn't find an export group
 
-        public void ClearCache()
-        {
-            NetFieldExportGroupMap.Clear();
-            NetFieldExportGroupIndexToGroup.Clear();
-            NetGuidToPathName.Clear();
-            NetFieldExportGroupMapPathFixed.Clear();
-            NetworkGameplayTagNodeIndex = null;
+	private Dictionary<string, NetFieldExportGroup> _pathToExportGroup = new();
 
-            _archTypeToExportGroup.Clear();
-            _cleanedClassNetCache.Clear();
-            _partialPathNames.Clear();
-            _cleanedPaths.Clear();
-            _failedPaths.Clear();
-            _pathToExportGroup.Clear();
-        }
+	public void ClearCache()
+	{
+		NetFieldExportGroupMap.Clear();
+		NetFieldExportGroupIndexToGroup.Clear();
+		NetGuidToPathName.Clear();
+		NetFieldExportGroupMapPathFixed.Clear();
+		ExternalData.Clear();
+		NetworkGameplayTagNodeIndex = null;
 
-        public void AddToExportGroupMap(string group, NetFieldExportGroup exportGroup)
-        {
-            if (NetworkGameplayTagNodeIndex == null && group == "NetworkGameplayTagNodeIndex")
-            {
-                NetworkGameplayTagNodeIndex = exportGroup;
-            }
+		_archTypeToExportGroup.Clear();
+		_cleanedClassNetCache.Clear();
+		_partialPathNames.Clear();
+		_cleanedPaths.Clear();
+		_failedPaths.Clear();
+		_pathToExportGroup.Clear();
+	}
 
-            //Easiest way to do this update
-            if(group.EndsWith("ClassNetCache"))
-            {
-                exportGroup.PathName = RemoveAllPathPrefixes(exportGroup.PathName);
-            }
+	public void AddToExportGroupMap(string group, NetFieldExportGroup exportGroup)
+	{
+		if (NetworkGameplayTagNodeIndex == null && group == "NetworkGameplayTagNodeIndex")
+		{
+			NetworkGameplayTagNodeIndex = exportGroup;
+		}
 
-            NetFieldExportGroupMap[group] = exportGroup;
+		//Easiest way to do this update
+		if (group.EndsWith("ClassNetCache"))
+		{
+			exportGroup.PathName = Utilities.RemoveAllPathPrefixes(exportGroup.PathName);
+		}
 
-            //Check if partial path
-            foreach (KeyValuePair<string, string> partialRedirectKvp in CoreRedirects.PartialRedirects)
-            {
-                if (group.StartsWith(partialRedirectKvp.Key))
-                {
-                    _partialPathNames.TryAdd(group, partialRedirectKvp.Value);
-                    _partialPathNames.TryAdd(RemoveAllPathPrefixes(group), partialRedirectKvp.Value);
+		NetFieldExportGroupMap[group] = exportGroup;
 
-                    break;
-                }
-            }
-        }
+		//Check if partial path
+		foreach (KeyValuePair<string, string> partialRedirectKvp in CoreRedirects.PartialRedirects)
+		{
+			if (group.StartsWith(partialRedirectKvp.Key))
+			{
+				_partialPathNames.TryAdd(group, partialRedirectKvp.Value);
+				_partialPathNames.TryAdd(Utilities.RemoveAllPathPrefixes(group), partialRedirectKvp.Value);
 
-        public NetFieldExportGroup GetNetFieldExportGroup(string pathName)
-        {
-            if (String.IsNullOrEmpty(pathName))
-            {
-                return null;
-            }
+				break;
+			}
+		}
+	}
 
-            if (NetFieldExportGroupMap.TryGetValue(pathName, out NetFieldExportGroup netFieldExportGroup))
-            {
-                return netFieldExportGroup;
-            }
+	public NetFieldExportGroup GetNetFieldExportGroup(string pathName)
+	{
+		if (String.IsNullOrEmpty(pathName))
+		{
+			return null;
+		}
 
-            return null;
-        }
+		if (NetFieldExportGroupMap.TryGetValue(pathName, out NetFieldExportGroup netFieldExportGroup))
+		{
+			return netFieldExportGroup;
+		}
 
-        public NetFieldExportGroup GetNetFieldExportGroup(uint guid)
-        {
-            if (!_archTypeToExportGroup.ContainsKey(guid))
-            {
-                if (!NetGuidToPathName.ContainsKey(guid))
-                {
-                    return null;
-                }
+		return null;
+	}
 
-                var path = NetGuidToPathName[guid];
+	public NetFieldExportGroup GetNetFieldExportGroup(uint guid)
+	{
+		if (!_archTypeToExportGroup.ContainsKey(guid))
+		{
+			if (!NetGuidToPathName.ContainsKey(guid))
+			{
+				return null;
+			}
 
-                //Don't need to recheck. Some export groups are added later though
-                if (_failedPaths.Contains(path))
-                {
-                    return null;
-                }
+			var path = NetGuidToPathName[guid];
 
-                path = CoreRedirects.GetRedirect(path);
+			//Don't need to recheck. Some export groups are added later though
+			if (_failedPaths.Contains(path))
+			{
+				return null;
+			}
 
-                if (_partialPathNames.TryGetValue(path, out string redirectPath))
-                {
-                    path = redirectPath;
-                }
+			path = CoreRedirects.GetRedirect(path);
 
-                if (NetFieldExportGroupMapPathFixed.TryGetValue(guid, out var exportGroup) || _pathToExportGroup.TryGetValue(path, out exportGroup))
-                {
-                    _archTypeToExportGroup[guid] = exportGroup;
+			if (_partialPathNames.TryGetValue(path, out string redirectPath))
+			{
+				path = redirectPath;
+			}
 
-                    return exportGroup;
-                }
+			if (NetFieldExportGroupMapPathFixed.TryGetValue(guid, out var exportGroup) || _pathToExportGroup.TryGetValue(path, out exportGroup))
+			{
+				_archTypeToExportGroup[guid] = exportGroup;
 
-                foreach (var groupPathKvp in NetFieldExportGroupMap)
-                {
-                    var groupPath = groupPathKvp.Key;
+				return exportGroup;
+			}
 
-                    if (groupPathKvp.Value.CleanedPath == null)
-                    {
-                        groupPathKvp.Value.CleanedPath = RemoveAllPathPrefixes(groupPath);
-                    }
+			foreach (var groupPathKvp in NetFieldExportGroupMap)
+			{
+				var groupPath = groupPathKvp.Key;
 
-                    if (path.Contains(groupPathKvp.Value.CleanedPath))
-                    {
-                        NetFieldExportGroupMapPathFixed[guid] = groupPathKvp.Value;
-                        _archTypeToExportGroup[guid] = groupPathKvp.Value;
-                        _pathToExportGroup[path] = groupPathKvp.Value;
+				if (groupPathKvp.Value.CleanedPath == null)
+				{
+					groupPathKvp.Value.CleanedPath = Utilities.RemoveAllPathPrefixes(groupPath);
+				}
 
-                        return groupPathKvp.Value;
-                    }
-                }
+				if (path.Contains(groupPathKvp.Value.CleanedPath))
+				{
+					NetFieldExportGroupMapPathFixed[guid] = groupPathKvp.Value;
+					_archTypeToExportGroup[guid] = groupPathKvp.Value;
+					_pathToExportGroup[path] = groupPathKvp.Value;
 
-                //Try fixing ...
+					return groupPathKvp.Value;
+				}
+			}
 
-                var cleanedPath = CleanPathSuffix(path);
+			//Try fixing ...
 
-                foreach (var groupPathKvp in NetFieldExportGroupMap)
-                {
-                    if (groupPathKvp.Value.CleanedPath.Contains(cleanedPath))
-                    {
-                        NetFieldExportGroupMapPathFixed[guid] = groupPathKvp.Value;
-                        _archTypeToExportGroup[guid] = groupPathKvp.Value;
-                        _pathToExportGroup[path] = groupPathKvp.Value;
+			var cleanedPath = Utilities.CleanPathSuffix(path);
 
-                        return groupPathKvp.Value;
-                    }
-                }
+			foreach (var groupPathKvp in NetFieldExportGroupMap)
+			{
+				if (groupPathKvp.Value.CleanedPath.Contains(cleanedPath))
+				{
+					NetFieldExportGroupMapPathFixed[guid] = groupPathKvp.Value;
+					_archTypeToExportGroup[guid] = groupPathKvp.Value;
+					_pathToExportGroup[path] = groupPathKvp.Value;
 
-                _failedPaths.Add(path);
+					return groupPathKvp.Value;
+				}
+			}
 
-                return null;
-            }
-            else
-            {
-                return _archTypeToExportGroup[guid];
-            }
-        }
+			_failedPaths.Add(path);
 
-        public NetFieldExportGroup GetNetFieldExportGroupForClassNetCache(string group, bool fullPath = false)
-        {
-            if (!_cleanedClassNetCache.TryGetValue(group, out var classNetCachePath))
-            {
-                if (fullPath)
-                {
-                    classNetCachePath = $"{group}_ClassNetCache";
-                }
-                else
-                {
-                    classNetCachePath = $"{RemoveAllPathPrefixes(group)}_ClassNetCache";
-                }
+			return null;
+		}
+		else
+		{
+			return _archTypeToExportGroup[guid];
+		}
+	}
 
-                _cleanedClassNetCache[group] = classNetCachePath;
-            }
+	public NetFieldExportGroup GetNetFieldExportGroupForClassNetCache(string group, bool fullPath = false)
+	{
+		if (!_cleanedClassNetCache.TryGetValue(group, out var classNetCachePath))
+		{
+			if (fullPath)
+			{
+				classNetCachePath = $"{group}_ClassNetCache";
+			}
+			else
+			{
+				classNetCachePath = $"{Utilities.RemoveAllPathPrefixes(group)}_ClassNetCache";
+			}
 
-            if (!NetFieldExportGroupMap.ContainsKey(classNetCachePath))
-            {
-                return default;
-            }
+			_cleanedClassNetCache[group] = classNetCachePath;
+		}
 
-            return NetFieldExportGroupMap[classNetCachePath];
-        }
+		if (!NetFieldExportGroupMap.ContainsKey(classNetCachePath))
+		{
+			return default;
+		}
 
-        public string RemoveAllPathPrefixes(string path)
-        {
-            path = RemovePathPrefix(path, "Default__");
-
-            for (int i = path.Length - 1; i >= 0; i--)
-            {
-                switch (path[i])
-                {
-                    case '.':
-                        return path.Substring(i + 1);
-                    case '/':
-                        return path;
-                }
-            }
-
-            return path;
-        }
-
-        private string RemovePathPrefix(string path, string toRemove)
-        {
-            if (toRemove.Length > path.Length)
-            {
-                return path;
-            }
-
-            for (int i = 0; i < toRemove.Length; i++)
-            {
-                if (path[i] != toRemove[i])
-                {
-                    return path;
-                }
-            }
-
-            return path.Substring(toRemove.Length);
-        }
-
-        private string RemovePathSuffix(string path, string toRemove)
-        {
-            if (toRemove.Length > path.Length)
-            {
-                return path;
-            }
-
-            for (int i = 0; i < toRemove.Length; i++)
-            {
-                int pathIndex = path.Length - toRemove.Length + i;
-
-                if (path[pathIndex] != toRemove[i])
-                {
-                    return path;
-                }
-            }
-
-            return path.Substring(0, path.Length - toRemove.Length);
-        }
-
-        //Removes all numbers and underscores from suffix
-        private string CleanPathSuffix(string path)
-        {
-            for (int i = path.Length - 1; i >= 0; i--)
-            {
-                bool isDigit = (path[i] ^ '0') <= 9;
-                bool isUnderscore = path[i] == '_';
-
-                if (!isDigit && !isUnderscore)
-                {
-                    return path.Substring(0, i + 1);
-                }
-            }
-
-            return path;
-        }
-
-        /*
-        private string RemovePathSuffix(string path)
-        {
-            return Regex.Replace(path, @"(_?[0-9]+)+$", "");
-        }
-
-        private string RemovePathSuffix(string path, string toRemove)
-        {
-            return Regex.Replace(path, $@"{toRemove}$", "");
-        }
-        */
-    }
+		return NetFieldExportGroupMap[classNetCachePath];
+	}
 }

@@ -1,38 +1,34 @@
-using System;
-using System.Collections.Generic;
-using System.Text;
 using Unreal.Core.Attributes;
 using Unreal.Core.Contracts;
 using Unreal.Core.Models;
 using Unreal.Core.Models.Enums;
 
-namespace FortniteReplayReader.Models.NetFieldExports.ClassNetCaches.Structures
+namespace FortniteReplayReader.Models.NetFieldExports.ClassNetCaches.Structures;
+
+[NetFieldExportGroup("/Script/FortniteGame.FortClientObservedStat", ParseType.Normal)]
+public class FortClientObservedStat : INetFieldExportGroup
 {
-    [NetFieldExportGroup("/Script/FortniteGame.FortClientObservedStat", ParseType.Normal)]
-    public class FortClientObservedStat : INetFieldExportGroup
-    {
-        [NetFieldExport("StatName", RepLayoutCmdType.PropertyName)]
-        public string StatName { get; set; }
+	[NetFieldExport("StatName", RepLayoutCmdType.PropertyName)]
+	public string StatName { get; set; }
 
-        [NetFieldExport("StatValue", RepLayoutCmdType.PropertyUInt32)]
-        public uint? StatValue { get; set; }
+	[NetFieldExport("StatValue", RepLayoutCmdType.PropertyUInt32)]
+	public uint? StatValue { get; set; }
 
-		public override bool ManualRead(string property, object value)
+	public override bool ManualRead(string property, object value)
+	{
+		switch (property)
 		{
-			switch(property)
-			{
-				case "StatName":
-					StatName = (string)value;
-					break;
-				case "StatValue":
-					StatValue = (uint)value;
-					break;
-				default:
-					return base.ManualRead(property, value);
-			}
-
-			return true;
+			case "StatName":
+				StatName = (string)value;
+				break;
+			case "StatValue":
+				StatValue = (uint)value;
+				break;
+			default:
+				return base.ManualRead(property, value);
 		}
 
-    }
+		return true;
+	}
+
 }

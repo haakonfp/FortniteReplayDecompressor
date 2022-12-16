@@ -1,6 +1,5 @@
-namespace FortniteReplayReader.Models
+namespace FortniteReplayReader.Models;
+
+public class BattleBusFlight : BaseEvent
 {
-    public class BattleBusFlight : BaseEvent
-    {
-    }
 }
