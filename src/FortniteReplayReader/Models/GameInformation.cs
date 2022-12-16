@@ -184,8 +184,9 @@ public class GameInformation
         GameState.ElapsedTime = gameState.ElapsedTime ?? GameState.ElapsedTime;
         GameState.OldTeamSize = gameState.TeamSize ?? GameState.OldTeamSize;
         GameState.TotalPlayerStructures = gameState.TotalPlayerStructures ?? GameState.TotalPlayerStructures;
+		GameState.RecorderActor = gameState.RecorderPlayerState?.Value ?? GameState.RecorderActor;
 
-        if (GameState.GameWorldStartTime == 0)
+		if (GameState.GameWorldStartTime == 0)
         {
             GameState.GameWorldStartTime = gameState.ReplicatedWorldTimeSeconds ?? GameState.AirCraftStartTime;
         }
@@ -202,29 +203,29 @@ public class GameInformation
             }
         }
 
-        if (gameState.StormCapState != EAthenaStormCapState.EAthenaStormCapState_MAX)
-        {
-            this.UpdateStormSurges(gameState.StormCapState, GameState.CurrentWorldTime);
-        }
+		if (gameState.StormCapState != EAthenaStormCapState.EAthenaStormCapState_MAX)
+		{
+			UpdateStormSurges(gameState.StormCapState, GameState.CurrentWorldTime);
+		}
 
-        if(gameState.WinningTeam.HasValue)
-        {
-            GameState.WinningTeam = gameState.WinningTeam.Value;
+		if (gameState.WinningTeam.HasValue)
+		{
+			GameState.WinningTeam = gameState.WinningTeam.Value;
 
-            if(_teams.TryGetValue((int)GameState.WinningTeam, out Team team))
-            {
-                foreach(Player player in team.Players)
-                {
-                    if(player.Placement == 0)
-                    {
-                        player.Placement = 1;
-                    }
-                }
-            }
-        }
-    }
-    
-    internal void UpdateStormSurges(EAthenaStormCapState state, float time)
+			if (_teams.TryGetValue((int)GameState.WinningTeam, out Team team))
+			{
+				foreach (Player player in team.Players)
+				{
+					if (player.Placement == 0)
+					{
+						player.Placement = 1;
+					}
+				}
+			}
+		}
+	}
+
+	internal void UpdateStormSurges(EAthenaStormCapState state, float time)
     {
         if (state == EAthenaStormCapState.Clear && _stormSurges.Count == 0)
         {
@@ -382,15 +383,27 @@ public class GameInformation
             return;
         }
 
-        bool isNewPlayer = !_players.TryGetValue(channelId, out Player newPlayer);
+		bool isNewPlayer = !_players.TryGetValue(channelId, out Player newPlayer) || newPlayer.ChannelClosed;
 
-
-        if (isNewPlayer)
+		if (isNewPlayer)
         {
-            newPlayer = new Player();
+			//Channel is being replaced by a new player. Store the old player
+			if (newPlayer?.ChannelClosed == true)
+			{
+				_players.Add(_closedPlayerChannelId--, newPlayer);
+			}
 
-            _players.TryAdd(channelId, newPlayer);
-        }
+			newPlayer = new Player();
+
+			//Check if recording player
+			if (_actorToChannel.TryGetValue(GameState.RecorderActor, out uint channel) && channelId == channel)
+			{
+				newPlayer.IsPlayersReplay = true;
+				GameState.ReplayRecorder = newPlayer;
+			}
+
+			_players[channelId] = newPlayer;
+		}
 
         if (networkGameplayTagNode != null)
         {
@@ -448,7 +461,7 @@ public class GameInformation
             _replayPlayer = newPlayer;
         }
 
-        if (playerState.DeathCause != null)
+        if (playerState.DeathCause != EDeathCause.EDeathCause_MAX)
         {
             newPlayer.LastDeathOrKnockTime = GameState.CurrentWorldTime;
 
@@ -485,7 +498,7 @@ public class GameInformation
 
         if (playerState.bIsDisconnected == true && newPlayer.StatusChanges.LastOrDefault()?.CurrentPlayerState != PlayerState.Killed)
         {
-            KillFeedEntry entry = new KillFeedEntry
+            KillFeedEntry entry = new()
             {
                 FinisherOrDowner = newPlayer,
                 CurrentPlayerState = PlayerState.Killed,
@@ -678,9 +691,9 @@ public class GameInformation
                     }
                     else
                     {
-                        Weapon weapon = new Weapon();
+                        Weapon weapon = new();
 
-                        _unknownWeapons.Add(playerPawnC.CurrentWeapon.Value, weapon);
+                        _unknownWeapons.TryAdd(playerPawnC.CurrentWeapon.Value, weapon);
 
                         playerActor.WeaponSwitches.Add(new WeaponSwitch
                         {

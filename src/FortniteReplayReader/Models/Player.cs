@@ -63,7 +63,8 @@ namespace FortniteReplayReader.Models
         internal uint ReplayPawnId { get; set; }
         internal PlayerMovementInformation MovementInformation { get; set; } = new PlayerMovementInformation();
         internal float InitialMovementTimestamp { get; set; }
-    }
+		internal bool ChannelClosed { get; set; }
+	}
 
     public class PlayerLocation
     {
