@@ -1,17 +1,14 @@
 ﻿using System;
-using System.Collections.Generic;
-using System.Text;
 
-namespace Unreal.Core.Attributes
+namespace Unreal.Core.Attributes;
+
+[AttributeUsage(AttributeTargets.Class | AttributeTargets.Struct)]
+public sealed class PlayerControllerAttribute : Attribute
 {
-    [AttributeUsage(AttributeTargets.Class | AttributeTargets.Struct)]
-    public sealed class PlayerControllerAttribute : Attribute
-    {
-        public string Name { get; private set; }
+	public string Name { get; private set; }
 
-        public PlayerControllerAttribute(string name)
-        {
-            Name = name;
-        }
-    }
+	public PlayerControllerAttribute(string name)
+	{
+		Name = name;
+	}
 }

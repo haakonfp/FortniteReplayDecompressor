@@ -1,17 +1,10 @@
-﻿using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Text;
-using System.Threading.Tasks;
+﻿namespace FortniteReplayReader.Models.NetFieldExports.Enums;
 
-namespace FortniteReplayReader.Models.NetFieldExports.Enums
+public enum EAthenaStormCapState
 {
-	public enum EAthenaStormCapState
-	{
-		None,
-		Clear,
-		Warning,
-		Damaging,
-		EAthenaStormCapState_MAX,
-	};
-}
+	None,
+	Clear,
+	Warning,
+	Damaging,
+	EAthenaStormCapState_MAX,
+};

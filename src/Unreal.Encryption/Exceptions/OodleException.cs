@@ -1,10 +1,9 @@
 ﻿using System;
 
-namespace Unreal.Encryption.Exceptions
+namespace Unreal.Encryption.Exceptions;
+
+public class OodleException : Exception
 {
-    public class OodleException : Exception
-    {
-        public OodleException() : base() { }
-        public OodleException(string msg) : base(msg) { }
-    }
+	public OodleException() : base() { }
+	public OodleException(string msg) : base(msg) { }
 }

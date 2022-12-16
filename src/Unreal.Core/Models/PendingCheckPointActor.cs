@@ -1,9 +1,8 @@
-﻿namespace Unreal.Core.Models
+﻿namespace Unreal.Core.Models;
+
+class PendingCheckPointActor
 {
-    class PendingCheckPointActor
-    {
-        //TWeakObjectPtr<AActor> Actor;
-        string Actor;
-        int LevelIndex;
-    }
+	//TWeakObjectPtr<AActor> Actor;
+	string Actor;
+	int LevelIndex;
 }

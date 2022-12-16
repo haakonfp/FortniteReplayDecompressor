@@ -1,16 +1,9 @@
-﻿using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Text;
-using System.Threading.Tasks;
+﻿namespace FortniteReplayReader.Models.NetFieldExports.Enums;
 
-namespace FortniteReplayReader.Models.NetFieldExports.Enums
+public enum EFortPickupTossState
 {
-	public enum EFortPickupTossState
-	{
-		NotTossed,
-		InProgress,
-		AtRest,
-		EFortPickupTossState_MAX,
-	};
-}
+	NotTossed,
+	InProgress,
+	AtRest,
+	EFortPickupTossState_MAX,
+};

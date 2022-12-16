@@ -1,11 +1,10 @@
-﻿namespace FortniteReplayReader.Models.NetFieldExports.Enums
+﻿namespace FortniteReplayReader.Models.NetFieldExports.Enums;
+
+public enum EJoinInProgress
 {
-	public enum EJoinInProgress
-	{
-		Spectate,
-		JoinOnNextRound,
-		JoinImmediately,
-		JoinSpecificTeam,
-		EJoinInProgress_MAX,
-	};
-}
+	Spectate,
+	JoinOnNextRound,
+	JoinImmediately,
+	JoinSpecificTeam,
+	EJoinInProgress_MAX,
+};

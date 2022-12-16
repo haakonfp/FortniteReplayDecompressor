@@ -1,11 +1,6 @@
-﻿using System;
-using System.Collections.Generic;
-using System.Text;
+﻿namespace Unreal.Core.Contracts;
 
-namespace Unreal.Core.Contracts
+public interface IProperty
 {
-    public interface IProperty
-    {
-        void Serialize(NetBitReader reader);
-    }
+	void Serialize(NetBitReader reader);
 }

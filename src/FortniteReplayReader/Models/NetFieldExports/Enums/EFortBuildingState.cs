@@ -1,16 +1,9 @@
-﻿using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Text;
-using System.Threading.Tasks;
+﻿namespace FortniteReplayReader.Models.NetFieldExports.Enums;
 
-namespace FortniteReplayReader.Models.NetFieldExports.Enums
+public enum EFortBuildingState
 {
-	public enum EFortBuildingState
-	{
-		Placement,
-		EditMode,
-		None,
-		EFortBuildingState_MAX,
-	};
-}
+	Placement,
+	EditMode,
+	None,
+	EFortBuildingState_MAX,
+};

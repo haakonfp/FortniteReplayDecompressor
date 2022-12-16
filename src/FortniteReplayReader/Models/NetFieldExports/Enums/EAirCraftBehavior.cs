@@ -1,17 +1,10 @@
-﻿using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Text;
-using System.Threading.Tasks;
+﻿namespace FortniteReplayReader.Models.NetFieldExports.Enums;
 
-namespace FortniteReplayReader.Models.NetFieldExports.Enums
+public enum EAirCraftBehavior
 {
-	public enum EAirCraftBehavior
-	{
-		Default,
-		OpposingAirCraftForEachTeam,
-		FlyTowardFirstCircleCenter,
-		NoAircraft,
-		EAirCraftBehavior_MAX,
-	};
-}
+	Default,
+	OpposingAirCraftForEachTeam,
+	FlyTowardFirstCircleCenter,
+	NoAircraft,
+	EAirCraftBehavior_MAX,
+};

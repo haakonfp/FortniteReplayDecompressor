@@ -1,42 +1,41 @@
 ﻿using Unreal.Core.Contracts;
 using Unreal.Core.Models.Enums;
 
-namespace Unreal.Core.Models
+namespace Unreal.Core.Models;
+
+public class FStaticName : IProperty
 {
-    public class FStaticName : IProperty
-    {
-        public string Value { get; private set; }
+	public string Value { get; private set; }
 
-        public void Serialize(NetBitReader reader)
-        {
-            var isHardcoded = reader.ReadBoolean();
+	public void Serialize(NetBitReader reader)
+	{
+		var isHardcoded = reader.ReadBoolean();
 
-            if (isHardcoded)
-            {
-                uint nameIndex;
-                if (reader.EngineNetworkVersion < EngineNetworkVersionHistory.HISTORY_CHANNEL_NAMES)
-                {
-                    nameIndex = reader.ReadUInt32();
-                }
-                else
-                {
-                    nameIndex = reader.ReadIntPacked();
-                }
+		if (isHardcoded)
+		{
+			uint nameIndex;
+			if (reader.EngineNetworkVersion < EngineNetworkVersionHistory.HISTORY_CHANNEL_NAMES)
+			{
+				nameIndex = reader.ReadUInt32();
+			}
+			else
+			{
+				nameIndex = reader.ReadIntPacked();
+			}
 
-				Value = UnrealNameConstants.Names[nameIndex];
+			Value = UnrealNameConstants.Names[nameIndex];
 
-				return;
-            }
+			return;
+		}
 
-            var inString = reader.ReadFString();
-            var inNumber = reader.ReadInt32();
+		var inString = reader.ReadFString();
+		var inNumber = reader.ReadInt32();
 
-            Value = inString;
-        }
+		Value = inString;
+	}
 
-        public override string ToString()
-        {
-            return Value;
-        }
-    }
+	public override string ToString()
+	{
+		return Value;
+	}
 }

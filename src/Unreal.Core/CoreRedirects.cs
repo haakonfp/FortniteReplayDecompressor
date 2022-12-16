@@ -2,52 +2,50 @@
 using System.Collections.Generic;
 using System.Linq;
 using System.Reflection;
-using System.Text;
 using Unreal.Core.Attributes;
 using Unreal.Core.Extensions;
 
-namespace Unreal.Core
+namespace Unreal.Core;
+
+public static class CoreRedirects
 {
-    public static class CoreRedirects
-    {
-		public static Dictionary<string, string> PartialRedirects { get; private set; } = new Dictionary<string, string>();
-		private static readonly Dictionary<string, string> _redirects = new Dictionary<string, string>();
+	public static Dictionary<string, string> PartialRedirects { get; private set; } = new Dictionary<string, string>();
+	private static readonly Dictionary<string, string> _redirects = new();
 
-		static CoreRedirects()
+	static CoreRedirects()
+	{
+		Assembly[] currentAssemblies = AppDomain.CurrentDomain.GetAssemblies();
+
+		IEnumerable<Type> netFields = currentAssemblies.SelectMany(x => x.GetTypes()).Where(x => x.GetCustomAttribute<NetFieldExportGroupAttribute>() != null);
+
+		foreach (Type type in netFields)
 		{
-			Assembly[] currentAssemblies = AppDomain.CurrentDomain.GetAssemblies();
+			NetFieldExportGroupAttribute exportGroupAttribute = type.GetCustomAttribute<NetFieldExportGroupAttribute>();
+			IEnumerable<PartialNetFieldExportGroup> partialAttributes = type.GetCustomAttributes<PartialNetFieldExportGroup>();
+			IEnumerable<RedirectPathAttribute> redirectAttributes = type.GetCustomAttributes<RedirectPathAttribute>();
 
-			IEnumerable<Type> netFields = currentAssemblies.SelectMany(x => x.GetTypes()).Where(x => x.GetCustomAttribute<NetFieldExportGroupAttribute>() != null);
-
-			foreach (Type type in netFields)
+			foreach (PartialNetFieldExportGroup partialAttribute in partialAttributes)
 			{
-				NetFieldExportGroupAttribute exportGroupAttribute = type.GetCustomAttribute<NetFieldExportGroupAttribute>();
-				IEnumerable<PartialNetFieldExportGroup> partialAttributes = type.GetCustomAttributes<PartialNetFieldExportGroup>();
-				IEnumerable<RedirectPathAttribute> redirectAttributes = type.GetCustomAttributes<RedirectPathAttribute>();
+				PartialRedirects.Add(partialAttribute.PartialPath, exportGroupAttribute.Path);
+			}
 
-				foreach (PartialNetFieldExportGroup partialAttribute in partialAttributes)
+			if (redirectAttributes != null)
+			{
+				foreach (RedirectPathAttribute redirectAttribute in redirectAttributes)
 				{
-					PartialRedirects.Add(partialAttribute.PartialPath, exportGroupAttribute.Path);
-				}
-
-				if (redirectAttributes != null)
-				{
-					foreach (RedirectPathAttribute redirectAttribute in redirectAttributes)
-					{
-						_redirects.TryAdd(redirectAttribute.Path, Utilities.RemoveAllPathPrefixes(exportGroupAttribute.Path));
-					}
+					_redirects.TryAdd(redirectAttribute.Path, Utilities.RemoveAllPathPrefixes(exportGroupAttribute.Path));
 				}
 			}
 		}
+	}
 
-		public static string GetRedirect(string path)
+	public static string GetRedirect(string path)
+	{
+		if (_redirects.TryGetValue(path, out string result))
 		{
-			if (_redirects.TryGetValue(path, out string result))
-			{
-				return result;
-			}
-
-			return path;
+			return result;
 		}
+
+		return path;
 	}
 }

@@ -1,6 +1,5 @@
-namespace FortniteReplayReader.Models
+namespace FortniteReplayReader.Models;
+
+public class ZoneUpdate : BaseEvent
 {
-    public class ZoneUpdate : BaseEvent
-    {
-    }
 }

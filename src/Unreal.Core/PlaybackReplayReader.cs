@@ -5,328 +5,326 @@ using System.Collections.Generic;
 using System.Diagnostics;
 using System.IO;
 using System.Linq;
-using System.Text;
 using System.Threading;
 using Unreal.Core.Contracts;
 using Unreal.Core.Models;
 using Unreal.Core.Models.Enums;
 using Unreal.Core.Models.Playback;
 
-namespace Unreal.Core
+namespace Unreal.Core;
+
+public abstract class PlaybackReplayReader<T> : ReplayReader<T> where T : Replay, new()
 {
-    public abstract class PlaybackReplayReader<T> : ReplayReader<T> where T : Replay, new()
-    {
-        public double AverageFPS { get; private set; } = 0;
-        public int BufferCount => _buffer.Count;
-        public int FPSLimit { get; private set; } = 60;
-        public double BufferLengthMs { get; private set; } = 20000;
-        public double PlaybackSpeed { get; private set; } = 100;
-        public double CurrentTime { get; private set; }
+	public double AverageFPS { get; private set; } = 0;
+	public int BufferCount => _buffer.Count;
+	public int FPSLimit { get; private set; } = 60;
+	public double BufferLengthMs { get; private set; } = 20000;
+	public double PlaybackSpeed { get; private set; } = 100;
+	public double CurrentTime { get; private set; }
 
-        /// <summary>
-        /// Current time of latest event update
-        /// </summary>
-        public double LastUpdateTime { get; private set; }
+	/// <summary>
+	/// Current time of latest event update
+	/// </summary>
+	public double LastUpdateTime { get; private set; }
 
-        //Used to pause/unpause reader
-        private ManualResetEvent _pauseWaiter = new ManualResetEvent(false);
+	//Used to pause/unpause reader
+	private ManualResetEvent _pauseWaiter = new(false);
 
-        //Used to limit buffer size
-        private AutoResetEvent _bufferWaiter = new AutoResetEvent(false);
+	//Used to limit buffer size
+	private AutoResetEvent _bufferWaiter = new(false);
 
-        //Whether or not the replay has been fully read
-        private bool _finished = false;
+	//Whether or not the replay has been fully read
+	private bool _finished = false;
 
-        //Current time of latest read packet
-        private float _currentReadTimeSeconds = 0;
+	//Current time of latest read packet
+	private float _currentReadTimeSeconds = 0;
 
-        //Buffer used to hold playback events
-        private ConcurrentQueue<ReplayPlaybackEvent> _buffer = new ConcurrentQueue<ReplayPlaybackEvent>();
-        private System.Timers.Timer _bufferTimer = new System.Timers.Timer();
+	//Buffer used to hold playback events
+	private ConcurrentQueue<ReplayPlaybackEvent> _buffer = new();
+	private System.Timers.Timer _bufferTimer = new();
 
-        private bool _firstPacket = true;
-        private Stopwatch _timePassed = new Stopwatch();
+	private bool _firstPacket = true;
+	private Stopwatch _timePassed = new();
 
-        public event EventHandler<T> OnRender;
+	public event EventHandler<T> OnRender;
 
-        public PlaybackReplayReader(ILogger logger) : base(logger)
-        {
-            _bufferTimer.Elapsed += _bufferTimer_Elapsed;
-            _bufferTimer.Interval = 100;
-            _bufferTimer.Start();
-        }
+	public PlaybackReplayReader(ILogger logger) : base(logger)
+	{
+		_bufferTimer.Elapsed += _bufferTimer_Elapsed;
+		_bufferTimer.Interval = 100;
+		_bufferTimer.Start();
+	}
 
-        private void _bufferTimer_Elapsed(object sender, System.Timers.ElapsedEventArgs e)
-        {
-            if(CurrentTime + (BufferLengthMs / 2) >= _currentReadTimeSeconds * 1000)
-            {
-                _bufferWaiter.Set();
-            }
-        }
+	private void _bufferTimer_Elapsed(object sender, System.Timers.ElapsedEventArgs e)
+	{
+		if (CurrentTime + (BufferLengthMs / 2) >= _currentReadTimeSeconds * 1000)
+		{
+			_bufferWaiter.Set();
+		}
+	}
 
-        public void ReadReplay(string fileName, ParseType parseType = ParseType.Full)
-        {
-            using var stream = File.Open(fileName, FileMode.Open, FileAccess.Read, FileShare.ReadWrite);
-            
-            ReadReplay(stream, parseType);
-        }
+	public void ReadReplay(string fileName, ParseType parseType = ParseType.Full)
+	{
+		using var stream = File.Open(fileName, FileMode.Open, FileAccess.Read, FileShare.ReadWrite);
 
-        public void ReadReplay(Stream stream, ParseType parseType = ParseType.Full)
-        {
-            _finished = false;
-            _firstPacket = true;
-            _pauseWaiter.Reset();
-            _timePassed.Restart();
-            _currentReadTimeSeconds = 0;
-            ClearBuffer();
+		ReadReplay(stream, parseType);
+	}
 
-            using var archive = new BinaryReader(stream);
+	public void ReadReplay(Stream stream, ParseType parseType = ParseType.Full)
+	{
+		_finished = false;
+		_firstPacket = true;
+		_pauseWaiter.Reset();
+		_timePassed.Restart();
+		_currentReadTimeSeconds = 0;
+		ClearBuffer();
 
-            Thread thread = new Thread(UpdateThread);
-            thread.IsBackground = true;
-            thread.Start();
+		using var archive = new BinaryReader(stream);
 
-            ReadReplay(archive, parseType);
+		Thread thread = new(UpdateThread);
+		thread.IsBackground = true;
+		thread.Start();
 
-            _finished = true;
+		ReadReplay(archive, parseType);
 
-            //Wait for thread to finish
-            thread.Join();
-        }
+		_finished = true;
 
-        /// <summary>
-        /// Sets playback speed of replay file.
-        /// </summary>
-        /// <param name="speed"></param>
-        public void SetPlaybackSpeed(double speed = 1)
-        {
-            PlaybackSpeed = speed;
-        }
+		//Wait for thread to finish
+		thread.Join();
+	}
 
-        /// <summary>
-        /// Pauses playback of replay file
-        /// </summary>
-        public void Pause()
-        {
-            _pauseWaiter.Set();
-            _timePassed.Stop();
-        }
+	/// <summary>
+	/// Sets playback speed of replay file.
+	/// </summary>
+	/// <param name="speed"></param>
+	public void SetPlaybackSpeed(double speed = 1)
+	{
+		PlaybackSpeed = speed;
+	}
 
-        /// <summary>
-        /// Unpauses playback of replay file
-        /// </summary>
-        public void UnPause()
-        {
-            _pauseWaiter.Set();
-            _timePassed.Start();
-        }
+	/// <summary>
+	/// Pauses playback of replay file
+	/// </summary>
+	public void Pause()
+	{
+		_pauseWaiter.Set();
+		_timePassed.Stop();
+	}
 
-        /// <summary>
-        /// Stops replay completely
-        /// </summary>
-        public void Stop()
-        {
-            _finished = true;
+	/// <summary>
+	/// Unpauses playback of replay file
+	/// </summary>
+	public void UnPause()
+	{
+		_pauseWaiter.Set();
+		_timePassed.Start();
+	}
 
-            _pauseWaiter.Set();
-            _bufferWaiter.Set();
-            ClearBuffer();
-        }
+	/// <summary>
+	/// Stops replay completely
+	/// </summary>
+	public void Stop()
+	{
+		_finished = true;
 
-        /// <summary>
-        /// Goes to specific time in replay file
-        /// </summary>
-        /// <param name="time"></param>
-        public void GoToTime(TimeSpan time)
-        {
-            throw new NotImplementedException();
+		_pauseWaiter.Set();
+		_bufferWaiter.Set();
+		ClearBuffer();
+	}
 
-            //TODO
-            //Write code in ReplayReader to go to start from a checkpoint
-        }
+	/// <summary>
+	/// Goes to specific time in replay file
+	/// </summary>
+	/// <param name="time"></param>
+	public void GoToTime(TimeSpan time)
+	{
+		throw new NotImplementedException();
 
-        /// <summary>
-        /// Sets maximum times Render can be called within a second
-        /// </summary>
-        /// <param name="fps"></param>
-        public void SetFPSLimit(int fps = 30)
-        {
-            if(fps <= 0)
-            {
-                throw new ArgumentException($"{nameof(fps)} needs to be > 0");
-            }
+		//TODO
+		//Write code in ReplayReader to go to start from a checkpoint
+	}
 
-            FPSLimit = fps;
-        }
+	/// <summary>
+	/// Sets maximum times Render can be called within a second
+	/// </summary>
+	/// <param name="fps"></param>
+	public void SetFPSLimit(int fps = 30)
+	{
+		if (fps <= 0)
+		{
+			throw new ArgumentException($"{nameof(fps)} needs to be > 0");
+		}
 
-        public void SetBufferLength(double milliseconds)
-        {
-            if (milliseconds <= 0)
-            {
-                throw new ArgumentException($"{nameof(milliseconds)} needs to be > 0");
-            }
+		FPSLimit = fps;
+	}
 
-            BufferLengthMs = milliseconds;
-        }
+	public void SetBufferLength(double milliseconds)
+	{
+		if (milliseconds <= 0)
+		{
+			throw new ArgumentException($"{nameof(milliseconds)} needs to be > 0");
+		}
 
-        private void UpdateThread()
-        {
-            //Wait until first packet is read
-            _pauseWaiter.WaitOne();
+		BufferLengthMs = milliseconds;
+	}
 
-            double lastLoopMs = 0;
-            int _frames = 0;
-            double _startTime = 0;
+	private void UpdateThread()
+	{
+		//Wait until first packet is read
+		_pauseWaiter.WaitOne();
 
-            while (!_finished || _buffer.Count > 0)
-            {
-                double deltaTime = (_timePassed.Elapsed.TotalMilliseconds - lastLoopMs) * PlaybackSpeed;
-                CurrentTime += deltaTime;
-                lastLoopMs = _timePassed.Elapsed.TotalMilliseconds;
+		double lastLoopMs = 0;
+		int _frames = 0;
+		double _startTime = 0;
 
-                double loopStartMs = CurrentTime;
-                double msPerTick = 1000d / FPSLimit;
+		while (!_finished || _buffer.Count > 0)
+		{
+			double deltaTime = (_timePassed.Elapsed.TotalMilliseconds - lastLoopMs) * PlaybackSpeed;
+			CurrentTime += deltaTime;
+			lastLoopMs = _timePassed.Elapsed.TotalMilliseconds;
 
-                ReadQueue(loopStartMs);
+			double loopStartMs = CurrentTime;
+			double msPerTick = 1000d / FPSLimit;
 
-                //Catch up on updates
-                while (loopStartMs + msPerTick < _timePassed.Elapsed.TotalMilliseconds)
-                {
-                    loopStartMs += msPerTick;
+			ReadQueue(loopStartMs);
 
-                    ReadQueue(loopStartMs);
-                }
+			//Catch up on updates
+			while (loopStartMs + msPerTick < _timePassed.Elapsed.TotalMilliseconds)
+			{
+				loopStartMs += msPerTick;
 
-                OnRender?.Invoke(this, Replay);
+				ReadQueue(loopStartMs);
+			}
 
-                ++_frames;
+			OnRender?.Invoke(this, Replay);
 
-                //Updates average FPS
-                if (_timePassed.ElapsedMilliseconds - _startTime > 500)
-                {
-                    AverageFPS = (float)_frames / (_timePassed.Elapsed.TotalMilliseconds - _startTime) * 1000;
-                    _startTime = _timePassed.Elapsed.TotalMilliseconds;
-                    _frames = 0;
-                }
+			++_frames;
 
-                //Wait, if needed. Accurate enough
-                TimeSpan waitTime = TimeSpan.FromMilliseconds((lastLoopMs + msPerTick) - _timePassed.Elapsed.TotalMilliseconds);
+			//Updates average FPS
+			if (_timePassed.ElapsedMilliseconds - _startTime > 500)
+			{
+				AverageFPS = (float)_frames / (_timePassed.Elapsed.TotalMilliseconds - _startTime) * 1000;
+				_startTime = _timePassed.Elapsed.TotalMilliseconds;
+				_frames = 0;
+			}
 
-                if (waitTime.TotalMilliseconds > 0)
-                {
-                    Thread.Sleep(waitTime);
-                }
+			//Wait, if needed. Accurate enough
+			TimeSpan waitTime = TimeSpan.FromMilliseconds((lastLoopMs + msPerTick) - _timePassed.Elapsed.TotalMilliseconds);
 
-                //Wait when paused
-                _pauseWaiter.WaitOne();
-            }
-        }
+			if (waitTime.TotalMilliseconds > 0)
+			{
+				Thread.Sleep(waitTime);
+			}
 
-        private void ReadQueue(double untilTime)
-        {
-            while(_buffer.TryPeek(out ReplayPlaybackEvent playbackEvent) && playbackEvent.Time < untilTime / 1000)
-            {
-                if (_buffer.TryDequeue(out playbackEvent))
-                {
-                    Update(playbackEvent);
+			//Wait when paused
+			_pauseWaiter.WaitOne();
+		}
+	}
 
-                    LastUpdateTime = playbackEvent.Time;
-                }
-            }
-        }
+	private void ReadQueue(double untilTime)
+	{
+		while (_buffer.TryPeek(out ReplayPlaybackEvent playbackEvent) && playbackEvent.Time < untilTime / 1000)
+		{
+			if (_buffer.TryDequeue(out playbackEvent))
+			{
+				Update(playbackEvent);
 
-        private void ClearBuffer()
-        {
+				LastUpdateTime = playbackEvent.Time;
+			}
+		}
+	}
+
+	private void ClearBuffer()
+	{
 #if NET5_0_OR_GREATER
-            _buffer.Clear();
+		_buffer.Clear();
 #else
             while(_buffer.TryDequeue(out var _))
             {
 
             }
 #endif
-        }
-        protected override void ReceivedRawPacket(PlaybackPacket packet)
-        {
-            _currentReadTimeSeconds = packet.TimeSeconds;
+	}
+	protected override void ReceivedRawPacket(PlaybackPacket packet)
+	{
+		_currentReadTimeSeconds = packet.TimeSeconds;
 
-            base.ReceivedRawPacket(packet);
+		base.ReceivedRawPacket(packet);
 
-            if (_firstPacket)
-            {
-                _firstPacket = false;
-                _timePassed.Start();
-                _pauseWaiter.Set();
-            }
-        }
+		if (_firstPacket)
+		{
+			_firstPacket = false;
+			_timePassed.Start();
+			_pauseWaiter.Set();
+		}
+	}
 
-        protected override IEnumerable<PlaybackPacket> ReadDemoFrameIntoPlaybackPackets(FArchive archive)
-        {
-            //Limits the buffer size by time
-            IEnumerable<PlaybackPacket> packets = base.ReadDemoFrameIntoPlaybackPackets(archive);
+	protected override IEnumerable<PlaybackPacket> ReadDemoFrameIntoPlaybackPackets(FArchive archive)
+	{
+		//Limits the buffer size by time
+		IEnumerable<PlaybackPacket> packets = base.ReadDemoFrameIntoPlaybackPackets(archive);
 
-            //Used to stop during playback
-            if (!_finished)
-            {
-                PlaybackPacket packet = packets.FirstOrDefault();
+		//Used to stop during playback
+		if (!_finished)
+		{
+			PlaybackPacket packet = packets.FirstOrDefault();
 
-                if (packet != null && packet.TimeSeconds * 1000 > LastUpdateTime * 1000 + BufferLengthMs)
-                {
-                    _bufferWaiter.WaitOne();
-                }
-            }
+			if (packet != null && packet.TimeSeconds * 1000 > LastUpdateTime * 1000 + BufferLengthMs)
+			{
+				_bufferWaiter.WaitOne();
+			}
+		}
 
-            return packets;
-        }
+		return packets;
+	}
 
-        protected override bool ContinueParsingChannel(INetFieldExportGroup exportGroup)
-        {
-            //Parse everything
-            return true;
-        }
+	protected override bool ContinueParsingChannel(INetFieldExportGroup exportGroup)
+	{
+		//Parse everything
+		return true;
+	}
 
-        protected override void OnChannelActorRead(uint channel, Actor actor)
-        {
-            _buffer.Enqueue(new ActorReadPlaybackEvent
-            {
-                Time = _currentReadTimeSeconds,
-                Channel = channel,
-                Actor = actor
-            });
-        }
+	protected override void OnChannelActorRead(uint channel, Actor actor)
+	{
+		_buffer.Enqueue(new ActorReadPlaybackEvent
+		{
+			Time = _currentReadTimeSeconds,
+			Channel = channel,
+			Actor = actor
+		});
+	}
 
-        protected override void OnChannelClosed(uint channel)
-        {
-            _buffer.Enqueue(new ChannelClosedPlaybackEvent
-            {
-                Time = _currentReadTimeSeconds,
-                Channel = channel
-            });
-        }
+	protected override void OnChannelClosed(uint channel)
+	{
+		_buffer.Enqueue(new ChannelClosedPlaybackEvent
+		{
+			Time = _currentReadTimeSeconds,
+			Channel = channel
+		});
+	}
 
-        protected override void OnExportRead(uint channel, INetFieldExportGroup exportGroup)
-        {
-            _buffer.Enqueue(new ExportGroupPlaybackEvent
-            {
-                Time = _currentReadTimeSeconds,
-                Channel = channel,
-                ExportGroup = exportGroup
-            });
-        }
+	protected override void OnExportRead(uint channel, INetFieldExportGroup exportGroup)
+	{
+		_buffer.Enqueue(new ExportGroupPlaybackEvent
+		{
+			Time = _currentReadTimeSeconds,
+			Channel = channel,
+			ExportGroup = exportGroup
+		});
+	}
 
-        protected override void OnNetDeltaRead(NetDeltaUpdate deltaUpdate)
-        {
-            _buffer.Enqueue(new NetDeltaPlaybackEvent
-            {
-                Time = _currentReadTimeSeconds,
-                DeltaUpdate = deltaUpdate
-            });
-        }
+	protected override void OnNetDeltaRead(NetDeltaUpdate deltaUpdate)
+	{
+		_buffer.Enqueue(new NetDeltaPlaybackEvent
+		{
+			Time = _currentReadTimeSeconds,
+			DeltaUpdate = deltaUpdate
+		});
+	}
 
-        /// <summary>
-        /// Used to update current game state
-        /// </summary>
-        /// <param name="playbackEvent">Event causing this update</param>
-        protected abstract void Update(ReplayPlaybackEvent playbackEvent);
-    }
+	/// <summary>
+	/// Used to update current game state
+	/// </summary>
+	/// <param name="playbackEvent">Event causing this update</param>
+	protected abstract void Update(ReplayPlaybackEvent playbackEvent);
 }

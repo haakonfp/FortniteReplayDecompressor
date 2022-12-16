@@ -1,18 +1,15 @@
-using System;
-using System.Collections.Generic;
-using System.Text;
 using Unreal.Core.Attributes;
 using Unreal.Core.Contracts;
 using Unreal.Core.Models;
 using Unreal.Core.Models.Enums;
 
-namespace FortniteReplayReader.Models.NetFieldExports.Sets
+namespace FortniteReplayReader.Models.NetFieldExports.Sets;
+
+[NetFieldExportGroup("/Script/FortniteGame.FortMovementSet", ParseType.Normal)]
+[RedirectPath("MovementSet")]
+public class MovementSet : IHandleNetFieldExportGroup
 {
-    [NetFieldExportGroup("/Script/FortniteGame.FortMovementSet", ParseType.Normal)]
-    [RedirectPath("MovementSet")]
-    public class MovementSet : IHandleNetFieldExportGroup
-    {
-        /*
+	/*
         [NetFieldExportHandle(0, RepLayoutCmdType.PropertyFloat)]
         public float? HealthBaseValue { get; set; }
 
@@ -30,5 +27,4 @@ namespace FortniteReplayReader.Models.NetFieldExports.Sets
 
         [NetFieldExportHandle(21, RepLayoutCmdType.PropertyFloat)]
         public float? ShieldMaxValue { get; set; }*/
-    }
 }

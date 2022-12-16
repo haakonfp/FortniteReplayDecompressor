@@ -1,11 +1,5 @@
-﻿using System;
-using System.Collections.Generic;
-using System.Text;
-using Unreal.Core.Models;
+﻿namespace FortniteReplayReader.Models;
 
-namespace FortniteReplayReader.Models
+public class Llama : SearchableItem
 {
-    public class Llama : SearchableItem
-    {
-    }
 }

@@ -1,12 +1,7 @@
-﻿using System;
-using System.Collections.Generic;
-using System.Text;
+﻿namespace FortniteReplayReader.Models;
 
-namespace FortniteReplayReader.Models
+public class SupplyDrop : SearchableItem
 {
-    public class SupplyDrop : SearchableItem
-    {
-		public float SpawnTime { get; internal set; }
-		public bool BalloonPopped { get; internal set; }
-    }
+	public float SpawnTime { get; internal set; }
+	public bool BalloonPopped { get; internal set; }
 }

@@ -1,14 +1,11 @@
 ﻿using System;
-using System.Collections.Generic;
-using System.Text;
 
-namespace OozSharp.Exceptions
+namespace OozSharp.Exceptions;
+
+public class DecoderException : Exception
 {
-    public class DecoderException : Exception
-    {
-        public DecoderException(string message) : base(message)
-        {
+	public DecoderException(string message) : base(message)
+	{
 
-        }
-    }
+	}
 }

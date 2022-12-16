@@ -13,9 +13,9 @@ public class ExternalPlayerNameData
 
 	public static ExternalPlayerNameData Parse(byte[] data)
 	{
-		using Unreal.Core.BinaryReader reader = new Unreal.Core.BinaryReader(new MemoryStream(data));
+		using Unreal.Core.BinaryReader reader = new(new MemoryStream(data));
 
-		ExternalPlayerNameData nameData = new ExternalPlayerNameData
+		ExternalPlayerNameData nameData = new()
 		{
 			Handle = reader.ReadByte(),
 			Unknown1 = reader.ReadByte(),
