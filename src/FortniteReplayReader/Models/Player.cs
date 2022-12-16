@@ -9,7 +9,9 @@ namespace FortniteReplayReader.Models
 {
     public class Player : PlayerPawn
     {
-        public string EpicId { get; internal set; }
+		public string DisplayName => ExternalPlayerData?.DecodedName;
+
+		public string EpicId { get; internal set; }
         public string PartyOwnerEpicId { get; internal set; }
         public string Platform { get; internal set; }
         public int Teamindex { get; internal set; }
@@ -63,6 +65,7 @@ namespace FortniteReplayReader.Models
         internal uint ReplayPawnId { get; set; }
         internal PlayerMovementInformation MovementInformation { get; set; } = new PlayerMovementInformation();
         internal float InitialMovementTimestamp { get; set; }
+		internal ExternalPlayerNameData ExternalPlayerData { get; set; }
 		internal bool ChannelClosed { get; set; }
 	}
 

@@ -5,7 +5,9 @@
     /// </summary>
     public class ExternalData
     {
-        public byte[] Data { get; set; }
-        public int TimeSeconds { get; set; }
-    }
+		public uint NetGUID { get; internal set; }
+		public float TimeSeconds { get; internal set; }
+		public byte[] Data { get; internal set; }
+		public string HandleName { get; internal set; }
+	}
 }

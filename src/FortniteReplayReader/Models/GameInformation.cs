@@ -451,7 +451,16 @@ public class GameInformation
         newPlayer.Cosmetics.Parts = GetPathName(playerState.Parts) ?? newPlayer.Cosmetics.Parts;
         newPlayer.MovementInformation.InBus = playerState.bInAircraft ?? newPlayer.MovementInformation.InBus;
 
-        if (playerState.VariantRequiredCharacterParts != null)
+		// Change how this is handled
+		if (playerState.ExternalData != null)
+		{
+			if (playerState.ExternalData.HandleName == "PlayerNamePrivate")
+			{
+				newPlayer.ExternalPlayerData = ExternalPlayerNameData.Parse(playerState.ExternalData.Data);
+			}
+		}
+
+		if (playerState.VariantRequiredCharacterParts != null)
         {
             newPlayer.Cosmetics.VariantRequiredCharacterParts = playerState.VariantRequiredCharacterParts.Select(x => GetPathName(x)).ToList();
         }

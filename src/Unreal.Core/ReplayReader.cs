@@ -1811,7 +1811,14 @@ namespace Unreal.Core
             Channels[channelIndex].Group.Add(group.PathName);
 #endif
 
-            if (!isDeltaRead) //Makes sure delta reads don't cause the channel to be ignored
+			ExternalData externalData = null;
+
+			if (GuidCache.ExternalData.Count > 0)
+			{
+				GuidCache.ExternalData.Remove(Channels[channelIndex].Actor.ActorNetGUID.Value, out externalData);
+			}
+
+			if (!isDeltaRead) //Makes sure delta reads don't cause the channel to be ignored
             {
                 if (ParseType != ParseType.Debug && !_netFieldParser.WillReadType(group.PathName, ParseType, out bool ignoreChannel))
                 {
@@ -1844,8 +1851,18 @@ namespace Unreal.Core
             outExport = exportGroup;
             outExport.ChannelActor = Channels[channelIndex].Actor;
 
+			if (externalData != null)
+			{
+				//Need to change later to a similar parsing like INetFieldExportGroup
+				if (externalData.Data.Length > 0 && group.NetFieldExports.Length > externalData.Data[0])
+				{
+					externalData.HandleName = group.NetFieldExports[externalData.Data[0]].Name;
+				}
 
-            bool hasData = false;
+				outExport.ExternalData = externalData;
+			}
+
+			bool hasData = false;
 
             while (true)
             {
