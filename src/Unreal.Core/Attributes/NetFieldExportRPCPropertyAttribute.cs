@@ -1,6 +1,5 @@
 ﻿using System;
-using System.Collections.Generic;
-using System.Text;
+using Unreal.Core.Extensions;
 
 namespace Unreal.Core.Attributes
 {
@@ -16,13 +15,13 @@ namespace Unreal.Core.Attributes
         public NetFieldExportRPCPropertyAttribute(string name, string typePathname, bool readChecksumBit = true, bool customStructure = false)
         {
             Name = name;
-            TypePathName = typePathname;
-            ReadChecksumBit = readChecksumBit;
+			TypePathName = Utilities.RemoveAllPathPrefixes(typePathname);
+			ReadChecksumBit = readChecksumBit;
             CustomStructure = customStructure;
 
             if (typePathname.Length > name.Length)
             {
-                IsFunction = typePathname[typePathname.Length - (name.Length + 1)] == ':';
+                IsFunction = typePathname[^(name.Length + 1)] == ':';
             }
         }
     }

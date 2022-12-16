@@ -1046,10 +1046,11 @@ namespace Unreal.Core
 
                 if (flags.HasFlag(ExportFlags.bHasNetworkChecksum))
                 {
-                    var networkChecksum = archive.ReadUInt32();
-                }
+					archive.SkipBytes(4);
+					//var networkChecksum = archive.ReadUInt32();
+				}
 
-                if (isExportingNetGUIDBunch)
+				if (isExportingNetGUIDBunch)
                 {
                     GuidCache.NetGuidToPathName[netGuid.Value] = Utilities.RemoveAllPathPrefixes(pathName);
                 }
