@@ -6,7 +6,7 @@ using FortniteReplayReader.Models.NetFieldExports;
 using FortniteReplayReader.Models.NetFieldExports.Builds;
 using FortniteReplayReader.Models.NetFieldExports.ClassNetCaches.Custom;
 using FortniteReplayReader.Models.NetFieldExports.ClassNetCaches.Functions;
-using FortniteReplayReader.Models.NetFieldExports.ClassNetCaches.Structures;
+using FortniteReplayReader.Models.NetFieldExports.Enums;
 using FortniteReplayReader.Models.NetFieldExports.Items.Containers;
 using FortniteReplayReader.Models.NetFieldExports.Items.Weapons;
 using FortniteReplayReader.Models.NetFieldExports.Sets;
@@ -303,8 +303,8 @@ namespace FortniteReplayReader
             }
 
             _logger?.LogWarning($"Unknown event {info.Group} ({info.Metadata}) of size {info.SizeInBytes}");
-            // optionally throw?
-            throw new UnknownEventException($"Unknown event {info.Group} ({info.Metadata}) of size {info.SizeInBytes}");
+
+            //throw new UnknownEventException($"Unknown event {info.Group} ({info.Metadata}) of size {info.SizeInBytes}");
         }
 
         protected virtual CharacterSample ParseCharacterSample(FArchive archive, EventInfo info)
@@ -344,10 +344,16 @@ namespace FortniteReplayReader
 
         protected virtual TeamStats ParseTeamStats(FArchive archive, EventInfo info)
         {
-            return new TeamStats()
+			int version = archive.ReadInt32();
+
+			if (version != 0)
+			{
+				_logger.LogWarning("Team stats version != 0");
+			}
+
+			return new TeamStats()
             {
                 Info = info,
-                Unknown = archive.ReadUInt32(),
                 Position = archive.ReadUInt32(),
                 TotalPlayers = archive.ReadUInt32()
             };
@@ -355,10 +361,16 @@ namespace FortniteReplayReader
 
         protected virtual Stats ParseMatchStats(FArchive archive, EventInfo info)
         {
-            return new Stats()
+			int version = archive.ReadInt32();
+
+			if (version != 0)
+			{
+				_logger.LogWarning("Match stats version != 0");
+			}
+
+			return new Stats()
             {
                 Info = info,
-                Unknown = archive.ReadUInt32(),
                 Accuracy = archive.ReadSingle(),
                 Assists = archive.ReadUInt32(),
                 Eliminations = archive.ReadUInt32(),
@@ -375,93 +387,74 @@ namespace FortniteReplayReader
 
         protected virtual PlayerElimination ParseElimination(FArchive archive, EventInfo info)
         {
-            try
-            {
-                var elim = new PlayerElimination
-                {
-                    Info = info,
-                };
+			try
+			{
+				var elim = new PlayerElimination
+				{
+					Info = info,
+				};
 
-                if (archive.EngineNetworkVersion >= EngineNetworkVersionHistory.HISTORY_FAST_ARRAY_DELTA_STRUCT && Major >= 9)
-                {
-                    if (archive.EngineNetworkVersion >= EngineNetworkVersionHistory.HISTORY_PACKED_VECTOR_LWC_SUPPORT)
-                    {
-                        // Skip: 5 Unknown Bytes, 1 Double (Unknown), 1 FVector (Unknown)
-                        archive.SkipBytes(5 + 8 + 3 * 8);
+				int version = archive.ReadInt32();
 
-                        elim.EliminatedInfo = new PlayerEliminationInfo
-                        {
-                            Location = new FVector(archive.ReadDouble(), archive.ReadDouble(), archive.ReadDouble()),
-                        };
+				if (version >= 3)
+				{
+					byte unknown = archive.ReadByte();
 
-                        // Skip: 1 FVector (Unknown), 1 Double (Unknown), 1 FVector (Unknown)
-                        archive.SkipBytes(3 * 8 + 8 + 3 * 8);
+					//EventLocation
+					if (version >= 6)
+					{
+						if (archive.EngineNetworkVersion >= EngineNetworkVersionHistory.HISTORY_PACKED_VECTOR_LWC_SUPPORT)
+						{
+							elim.EliminatedInfo.Rotation = new FQuat(archive.ReadDouble(), archive.ReadDouble(), archive.ReadDouble(), archive.ReadDouble());
+							elim.EliminatedInfo.Location = new FVector(archive.ReadDouble(), archive.ReadDouble(), archive.ReadDouble());
+							elim.EliminatedInfo.Scale = new FVector(archive.ReadDouble(), archive.ReadDouble(), archive.ReadDouble());
+						}
+						else
+						{
+							elim.EliminatedInfo.Rotation = new FQuat(archive.ReadSingle(), archive.ReadSingle(), archive.ReadSingle(), archive.ReadSingle());
+							elim.EliminatedInfo.Location = new FVector(archive.ReadSingle(), archive.ReadSingle(), archive.ReadSingle());
+							elim.EliminatedInfo.Scale = new FVector(archive.ReadSingle(), archive.ReadSingle(), archive.ReadSingle());
+						}
+					}
 
-                        elim.EliminatorInfo = new PlayerEliminationInfo
-                        {
-                            Location = new FVector(archive.ReadDouble(), archive.ReadDouble(), archive.ReadDouble()),
-                        };
+					//InstigatorLocation
+					if (archive.EngineNetworkVersion >= EngineNetworkVersionHistory.HISTORY_PACKED_VECTOR_LWC_SUPPORT)
+					{
+						elim.EliminatorInfo.Rotation = new FQuat(archive.ReadDouble(), archive.ReadDouble(), archive.ReadDouble(), archive.ReadDouble());
+						elim.EliminatorInfo.Location = new FVector(archive.ReadDouble(), archive.ReadDouble(), archive.ReadDouble());
+						elim.EliminatorInfo.Scale = new FVector(archive.ReadDouble(), archive.ReadDouble(), archive.ReadDouble());
+					}
+					else
+					{
+						elim.EliminatorInfo.Rotation = new FQuat(archive.ReadSingle(), archive.ReadSingle(), archive.ReadSingle(), archive.ReadSingle());
+						elim.EliminatorInfo.Location = new FVector(archive.ReadSingle(), archive.ReadSingle(), archive.ReadSingle());
+						elim.EliminatorInfo.Scale = new FVector(archive.ReadSingle(), archive.ReadSingle(), archive.ReadSingle());
+					}
 
-                        // Skip: 1 FVector (Unknown)
-                        archive.SkipBytes(3 * 8);
-                    }
-                    else
-                    {
-                        // Skip: 5 Unknown Bytes, 1 Float (Unknown), 1 FVector (Unknown)
-                        archive.SkipBytes(5 + 4 + 3 * 4);
+					ParsePlayer(archive, elim.EliminatedInfo, version);
+					ParsePlayer(archive, elim.EliminatorInfo, version);
+				}
+				else
+				{
+					if (Major <= 4 && Minor < 2)
+					{
+						//12 bytes including version int. Always all 0s
+						archive.SkipBytes(8);
+					}
+					else if (Major == 4 && Minor <= 2)
+					{
+						//Likely transform data with version being part of it, but don't have a replay to verify
+						archive.SkipBytes(36);
+					}
+				}
 
-                        elim.EliminatedInfo = new PlayerEliminationInfo
-                        {
-                            Location = new FVector(archive.ReadSingle(), archive.ReadSingle(), archive.ReadSingle()),
-                        };
+				elim.DeathCause = (EDeathCause)archive.ReadByte();
+				elim.Knocked = archive.ReadInt32AsBoolean();
 
-                        // Skip: 1 FVector (Unknown), 1 Float (Unknown), 1 FVector (Unknown)
-                        archive.SkipBytes(3 * 4 + 4 + 3 * 4);
+				elim.Timestamp = info.StartTime;
 
-                        elim.EliminatorInfo = new PlayerEliminationInfo
-                        {
-                            Location = new FVector(archive.ReadSingle(), archive.ReadSingle(), archive.ReadSingle()),
-                        };
-
-                        // Skip: 1 FVector (Unknown)
-                        archive.SkipBytes(3 * 4);
-                    }
-
-                    ParsePlayer(archive, elim.EliminatedInfo);
-                    ParsePlayer(archive, elim.EliminatorInfo);
-                }
-                else
-                {
-                    if (Major <= 4 && Minor < 2)
-                    {
-                        archive.SkipBytes(12);
-                    }
-                    else if (Major == 4 && Minor <= 2)
-                    {
-                        archive.SkipBytes(40);
-                    }
-                    else
-                    {
-                        archive.SkipBytes(45);
-                    }
-
-                    elim.EliminatedInfo = new PlayerEliminationInfo
-                    {
-                        Id = archive.ReadFString()
-                    };
-
-                    elim.EliminatorInfo = new PlayerEliminationInfo
-                    {
-                        Id = archive.ReadFString()
-                    };
-                }
-
-                elim.GunType = archive.ReadByte();
-                elim.Knocked = archive.ReadUInt32AsBoolean();
-                elim.Timestamp = info.StartTime;
-
-                return elim;
-            }
+				return elim;
+			}
             catch (Exception ex)
             {
                 _logger?.LogError($"Error while parsing PlayerElimination at timestamp {info.StartTime}");
@@ -469,14 +462,19 @@ namespace FortniteReplayReader
             }
         }
 
-        protected virtual void ParsePlayer(FArchive archive, PlayerEliminationInfo info)
+        protected virtual void ParsePlayer(FArchive archive, PlayerEliminationInfo info, int version)
         {
-            info.PlayerType = archive.ReadByteAsEnum<PlayerTypes>();
+			if (version < 6)
+			{
+				info.Id = archive.ReadFString();
+				return;
+			}
+
+			info.PlayerType = archive.ReadByteAsEnum<PlayerTypes>();
 
             switch (info.PlayerType)
             {
                 case PlayerTypes.Bot:
-
                     break;
                 case PlayerTypes.NamedBot:
                     info.Id = archive.ReadFString();
@@ -484,7 +482,10 @@ namespace FortniteReplayReader
                 case PlayerTypes.Player:
                     info.Id = archive.ReadGUID(archive.ReadByte());
                     break;
-            }
+				default:
+					_logger?.LogWarning($"Unknown player type {info.PlayerType}");
+					break;
+			}
         }
 
         protected override Unreal.Core.BinaryReader Decrypt(FArchive archive, int size)

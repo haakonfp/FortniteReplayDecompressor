@@ -1,19 +1,20 @@
 using FortniteReplayReader.Extensions;
+using FortniteReplayReader.Models.NetFieldExports.Enums;
 using System;
-using Unreal.Core.Models;
 
 namespace FortniteReplayReader.Models
 {
     public class PlayerElimination : BaseEvent, IEquatable<PlayerElimination>
     {
-        public PlayerEliminationInfo EliminatedInfo { get; internal set; }
-        public PlayerEliminationInfo EliminatorInfo { get; internal set; }
+        public PlayerEliminationInfo EliminatedInfo { get; internal set; } = new PlayerEliminationInfo();
+		public PlayerEliminationInfo EliminatorInfo { get; internal set; } = new PlayerEliminationInfo();
 
-        public string Eliminated => EliminatedInfo?.Id;
+		public string Eliminated => EliminatedInfo?.Id;
         public string Eliminator => EliminatorInfo?.Id;
 
-        public byte GunType { get; internal set; }
-        public string Time => Timestamp.MillisecondsToTimeStamp();
+		public byte GunType => (byte)DeathCause;
+		public EDeathCause DeathCause { get; internal set; } = EDeathCause.EDeathCause_MAX;
+		public string Time => Timestamp.MillisecondsToTimeStamp();
         public uint Timestamp { get; internal set; }
 
         public bool Knocked { get; internal set; }
