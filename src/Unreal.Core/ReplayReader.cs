@@ -680,42 +680,26 @@ namespace Unreal.Core
         /// </summary>
         protected virtual string StaticParseName(FArchive archive)
         {
-            var isHardcoded = archive.ReadBoolean();
-            if (isHardcoded)
-            {
-                uint nameIndex;
-                if (Replay.Header.EngineNetworkVersion < EngineNetworkVersionHistory.HISTORY_CHANNEL_NAMES)
-                {
-                    nameIndex = archive.ReadUInt32();
-                }
-                else
-                {
-                    nameIndex = archive.ReadIntPacked();
-                }
-                // https://github.com/EpicGames/UnrealEngine/blob/70bc980c6361d9a7d23f6d23ffe322a2d6ef16fb/Engine/Source/Runtime/Core/Public/UObject/UnrealNames.h#L31
-                // hard coded names in "UnrealNames.inl"
-                // https://github.com/EpicGames/UnrealEngine/blob/70bc980c6361d9a7d23f6d23ffe322a2d6ef16fb/Engine/Source/Runtime/Core/Public/UObject/UnrealNames.inl
+			var isHardcoded = archive.ReadBoolean();
+			if (isHardcoded)
+			{
+				uint nameIndex;
+				if (Replay.Header.EngineNetworkVersion < EngineNetworkVersionHistory.HISTORY_CHANNEL_NAMES)
+				{
+					nameIndex = archive.ReadUInt32();
+				}
+				else
+				{
+					nameIndex = archive.ReadIntPacked();
+				}
 
-                // https://github.com/EpicGames/UnrealEngine/blob/375ba9730e72bf85b383c07a5e4a7ba98774bcb9/Engine/Source/Runtime/Core/Public/UObject/NameTypes.h#L599
-                // https://github.com/EpicGames/UnrealEngine/blob/375ba9730e72bf85b383c07a5e4a7ba98774bcb9/Engine/Source/Runtime/Core/Private/UObject/UnrealNames.cpp#L283
-                // TODO: Combine with Fortnite SDK dump
-                return ((UnrealNames)nameIndex).ToString();
-            }
+				return UnrealNameConstants.Names[nameIndex];
+			}
 
-            // https://github.com/EpicGames/UnrealEngine/blob/70bc980c6361d9a7d23f6d23ffe322a2d6ef16fb/Engine/Source/Runtime/Core/Public/UObject/UnrealNames.h#L17
-            // MAX_NETWORKED_HARDCODED_NAME = 410
-
-            // https://github.com/EpicGames/UnrealEngine/blob/375ba9730e72bf85b383c07a5e4a7ba98774bcb9/Engine/Source/Runtime/Core/Public/UObject/NameTypes.h#L34
-            // NAME_SIZE = 1024
-
-            // InName.GetComparisonIndex() <= MAX_NETWORKED_HARDCODED_NAME;
-            // InName.GetPlainNameString();
-            // InName.GetNumber();
-
-            var inString = archive.ReadFString();
-            var inNumber = archive.ReadInt32();
-            return inString;
-        }
+			var inString = archive.ReadFString();
+			archive.SkipBytes(4);
+			return inString;
+		}
 
         /// <summary>
         /// see https://github.com/EpicGames/UnrealEngine/blob/70bc980c6361d9a7d23f6d23ffe322a2d6ef16fb/Engine/Source/Runtime/Engine/Classes/Engine/PackageMapClient.h#L64

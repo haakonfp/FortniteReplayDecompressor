@@ -1,7 +1,4 @@
-﻿using System;
-using System.Collections.Generic;
-using System.Text;
-using Unreal.Core.Contracts;
+﻿using Unreal.Core.Contracts;
 using Unreal.Core.Models.Enums;
 
 namespace Unreal.Core.Models
@@ -26,9 +23,9 @@ namespace Unreal.Core.Models
                     nameIndex = reader.ReadIntPacked();
                 }
 
-                Value = ((UnrealNames)nameIndex).ToString();
+				Value = UnrealNameConstants.Names[nameIndex];
 
-                return;
+				return;
             }
 
             var inString = reader.ReadFString();
