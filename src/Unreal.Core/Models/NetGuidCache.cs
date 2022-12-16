@@ -54,7 +54,7 @@ namespace Unreal.Core.Models
             //Easiest way to do this update
             if(group.EndsWith("ClassNetCache"))
             {
-                exportGroup.PathName = RemoveAllPathPrefixes(exportGroup.PathName);
+                exportGroup.PathName = Utilities.RemoveAllPathPrefixes(exportGroup.PathName);
             }
 
             NetFieldExportGroupMap[group] = exportGroup;
@@ -65,7 +65,7 @@ namespace Unreal.Core.Models
                 if (group.StartsWith(partialRedirectKvp.Key))
                 {
                     _partialPathNames.TryAdd(group, partialRedirectKvp.Value);
-                    _partialPathNames.TryAdd(RemoveAllPathPrefixes(group), partialRedirectKvp.Value);
+                    _partialPathNames.TryAdd(Utilities.RemoveAllPathPrefixes(group), partialRedirectKvp.Value);
 
                     break;
                 }
@@ -124,7 +124,7 @@ namespace Unreal.Core.Models
 
                     if (groupPathKvp.Value.CleanedPath == null)
                     {
-                        groupPathKvp.Value.CleanedPath = RemoveAllPathPrefixes(groupPath);
+                        groupPathKvp.Value.CleanedPath = Utilities.RemoveAllPathPrefixes(groupPath);
                     }
 
                     if (path.Contains(groupPathKvp.Value.CleanedPath))
@@ -139,7 +139,7 @@ namespace Unreal.Core.Models
 
                 //Try fixing ...
 
-                var cleanedPath = CleanPathSuffix(path);
+                var cleanedPath = Utilities.CleanPathSuffix(path);
 
                 foreach (var groupPathKvp in NetFieldExportGroupMap)
                 {
@@ -173,7 +173,7 @@ namespace Unreal.Core.Models
                 }
                 else
                 {
-                    classNetCachePath = $"{RemoveAllPathPrefixes(group)}_ClassNetCache";
+                    classNetCachePath = $"{Utilities.RemoveAllPathPrefixes(group)}_ClassNetCache";
                 }
 
                 _cleanedClassNetCache[group] = classNetCachePath;
@@ -186,90 +186,5 @@ namespace Unreal.Core.Models
 
             return NetFieldExportGroupMap[classNetCachePath];
         }
-
-        public string RemoveAllPathPrefixes(string path)
-        {
-            path = RemovePathPrefix(path, "Default__");
-
-            for (int i = path.Length - 1; i >= 0; i--)
-            {
-                switch (path[i])
-                {
-                    case '.':
-                        return path.Substring(i + 1);
-                    case '/':
-                        return path;
-                }
-            }
-
-            return path;
-        }
-
-        private string RemovePathPrefix(string path, string toRemove)
-        {
-            if (toRemove.Length > path.Length)
-            {
-                return path;
-            }
-
-            for (int i = 0; i < toRemove.Length; i++)
-            {
-                if (path[i] != toRemove[i])
-                {
-                    return path;
-                }
-            }
-
-            return path.Substring(toRemove.Length);
-        }
-
-        private string RemovePathSuffix(string path, string toRemove)
-        {
-            if (toRemove.Length > path.Length)
-            {
-                return path;
-            }
-
-            for (int i = 0; i < toRemove.Length; i++)
-            {
-                int pathIndex = path.Length - toRemove.Length + i;
-
-                if (path[pathIndex] != toRemove[i])
-                {
-                    return path;
-                }
-            }
-
-            return path.Substring(0, path.Length - toRemove.Length);
-        }
-
-        //Removes all numbers and underscores from suffix
-        private string CleanPathSuffix(string path)
-        {
-            for (int i = path.Length - 1; i >= 0; i--)
-            {
-                bool isDigit = (path[i] ^ '0') <= 9;
-                bool isUnderscore = path[i] == '_';
-
-                if (!isDigit && !isUnderscore)
-                {
-                    return path.Substring(0, i + 1);
-                }
-            }
-
-            return path;
-        }
-
-        /*
-        private string RemovePathSuffix(string path)
-        {
-            return Regex.Replace(path, @"(_?[0-9]+)+$", "");
-        }
-
-        private string RemovePathSuffix(string path, string toRemove)
-        {
-            return Regex.Replace(path, $@"{toRemove}$", "");
-        }
-        */
     }
 }
