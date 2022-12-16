@@ -228,7 +228,7 @@ public class FortPlayerState : INetFieldExportGroup
 	[NetFieldExport("PlayerNameCustomOverride", RepLayoutCmdType.Property)]
 	public FText PlayerNameCustomOverride { get; set; }
 
-	[NetFieldExport("SimulatedAttributes", RepLayoutCmdType.Property)]
+	[NetFieldExport("SimulatedAttributes", RepLayoutCmdType.Ignore)]
 	public DebuggingObject SimulatedAttributes { get; set; }
 
 	[NetFieldExport("KickedFromSessionReason", RepLayoutCmdType.Enum)]
@@ -506,5 +506,4 @@ public class FortPlayerState : INetFieldExportGroup
 
 		return true;
 	}
-
 }

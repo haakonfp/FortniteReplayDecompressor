@@ -633,41 +633,28 @@ public abstract class ReplayReader<T> where T : Replay, new()
 		while (true)
 		{
 			var externalDataNumBits = archive.ReadIntPacked();
+
 			if (externalDataNumBits == 0)
 			{
 				return;
 			}
 
 			// Read net guid this payload belongs to
-			var netGuid = archive.ReadIntPacked();
+			uint netGuid = archive.ReadIntPacked();
 
 			var externalDataNumBytes = (int)(externalDataNumBits + 7) >> 3;
-			//var externalData = archive.ReadBytes(externalDataNumBytes);
-			archive.SkipBytes(externalDataNumBytes);
 
-			// replayout setexternaldata
-			// https://github.com/EpicGames/UnrealEngine/blob/70bc980c6361d9a7d23f6d23ffe322a2d6ef16fb/Engine/Source/Runtime/Engine/Public/Net/RepLayout.h#L122
-			// FMemory::Memcpy(ExternalData.GetData(), Src, NumBytes);
+			ExternalData data = new()
+			{
+				NetGUID = netGuid,
+				//TimeSeconds = _currentPacket.TimeSeconds,
+				Data = archive.ReadBytes(externalDataNumBytes)
+			};
 
-			// this is a bitreader...
-			//var bitReader = new BitReader(externalData);
-			//bitReader.ReadBytes(3); // always 19 FB 01 ?
-			//var size = bitReader.ReadUInt32();
+			//Possible for multiple for a net guid?
+			GuidCache.ExternalData[netGuid] = data;
 
-			// FCharacterSample
-			// https://github.com/EpicGames/UnrealEngine/blob/70bc980c6361d9a7d23f6d23ffe322a2d6ef16fb/Engine/Source/Runtime/Engine/Private/Components/CharacterMovementComponent.cpp#L7074
-			// https://github.com/EpicGames/UnrealEngine/blob/70bc980c6361d9a7d23f6d23ffe322a2d6ef16fb/Engine/Source/Runtime/Engine/Classes/GameFramework/CharacterMovementComponent.h#L2656
-			//var location = bitReader.ReadPackedVector(10, 24);
-			//var velocity = bitReader.ReadPackedVector(10, 24);
-			//var acceleration = bitReader.ReadPackedVector(10, 24);
-			//var rotation = bitReader.ReadSerializeCompressed();
-			//var remoteViewPitch = bitReader.ReadByte();
-			//if (!bitReader.AtEnd())
-			//{
-			//    var time = bitReader.ReadSingle();
-			//}
-
-			externalDataIndex++;
+			//_externalDataIndex++;
 		}
 	}
 
